@@ -32,7 +32,6 @@ import {useContextStore} from '@/stores/context'
 import DemoModeToggle from '@/components/admin/DemoModeToggle'
 import MyProfile from '@/components/admin/MyProfile'
 import Spinner from '@/components/util/Spinner'
-// import Util from '@/mixins/Util'
 
 export default {
   name: 'Profile',
@@ -42,7 +41,6 @@ export default {
     Spinner
   },
   mounted() {
-    console.log('config', useContextStore().config)
     useContextStore().loadingComplete()
   }
 }
