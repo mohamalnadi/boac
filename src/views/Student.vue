@@ -5,31 +5,50 @@
       <StudentProfileHeader :student="student" />
     </div>
     <h2 class="sr-only">Academic Status</h2>
-    <div class="border-b-sm d-flex flex-wrap">
-      <div class="border-e-sm w-50">
+    <div class="border-b-sm d-flex flex-wrap w-100">
+      <div class="border-e-sm" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
         <h3 class="sr-only">Units</h3>
         <StudentProfileUnits :student="student" />
       </div>
-      <div class="w-50">
+      <div :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
         <h3 class="sr-only">GPA</h3>
         <StudentProfileGPA :student="student" />
       </div>
     </div>
     <div class="ma-3">
-      <AcademicTimeline :student="student" />
-      <AreYouSureModal
-        v-if="showAreYouSureModal"
-        :function-cancel="cancelTheCancel"
-        :function-confirm="cancelConfirmed"
-        :show-modal="showAreYouSureModal"
-        modal-header="Discard unsaved note?"
-      />
+      <div class="border-b-sm pb-3">
+        <AcademicTimeline :student="student" />
+      </div>
+      <div v-if="currentUser.canReadDegreeProgress" class="float-end mr-3 mt-3">
+        <router-link
+          id="view-degree-checks-link"
+          class="font-weight-medium"
+          target="_blank"
+          :to="getDegreeCheckPath()"
+        >
+          <div class="align-center d-flex">
+            <div>
+              Degree Checks<span class="sr-only"> of {{ student.name }} (will open new browser tab)</span>
+            </div>
+            <v-icon class="ml-1" :icon="mdiOpenInNew" size="18" />
+          </div>
+        </router-link>
+      </div>
+      <StudentClasses class="mt-5" :student="student" />
     </div>
-    <div>
-      <StudentClasses :student="student" />
-    </div>
+    <AreYouSureModal
+      v-if="showAreYouSureModal"
+      :function-cancel="cancelTheCancel"
+      :function-confirm="cancelConfirmed"
+      :show-modal="showAreYouSureModal"
+      modal-header="Discard unsaved note?"
+    />
   </div>
 </template>
+
+<script setup>
+import {mdiOpenInNew} from '@mdi/js'
+</script>
 
 <script>
 import AcademicTimeline from '@/components/student/profile/AcademicTimeline'
@@ -47,6 +66,7 @@ import {getStudentByUid} from '@/api/student'
 import {scrollToTop} from '@/lib/utils'
 import {setWaitlistedStatus} from '@/berkeley'
 import {useNoteStore} from '@/stores/note-edit-session'
+import {find} from 'lodash'
 
 export default {
   name: 'Student',
@@ -61,7 +81,22 @@ export default {
   },
   mixins: [Context, NoteEditSession, Util],
   beforeRouteLeave(to, from, next) {
-    this.confirmExitAndEndSession(next)
+    if (useNoteStore().mode) {
+      this.alertScreenReader('Are you sure you want to discard unsaved changes?')
+      this.cancelConfirmed = () => {
+        exitSession(true)
+        return next()
+      }
+      this.cancelTheCancel = () => {
+        this.alertScreenReader('Please save changes before exiting the page.')
+        this.showAreYouSureModal = false
+        next(false)
+      }
+      this.showAreYouSureModal = true
+    } else {
+      exitSession(true)
+      next()
+    }
   },
   data: () => ({
     cancelTheCancel: undefined,
@@ -94,22 +129,14 @@ export default {
     }
   },
   methods: {
-    confirmExitAndEndSession(next) {
-      if (useNoteStore().mode) {
-        this.alertScreenReader('Are you sure you want to discard unsaved changes?')
-        this.cancelConfirmed = () => {
-          exitSession(true)
-          return next()
-        }
-        this.cancelTheCancel = () => {
-          this.alertScreenReader('Please save changes before exiting the page.')
-          this.showAreYouSureModal = false
-          next(false)
-        }
-        this.showAreYouSureModal = true
+    getDegreeCheckPath() {
+      const currentDegreeCheck = find(this.student.degreeChecks, 'isCurrent')
+      if (currentDegreeCheck) {
+        return `/student/degree/${currentDegreeCheck.id}`
+      } else if (this.currentUser.canEditDegreeProgress) {
+        return `${this.studentRoutePath(this.student.uid, this.currentUser.inDemoMode)}/degree/create`
       } else {
-        exitSession(true)
-        next()
+        return `${this.studentRoutePath(this.student.uid, this.currentUser.inDemoMode)}/degree/history`
       }
     },
     parseEnrollmentTerm(term) {

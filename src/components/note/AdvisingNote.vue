@@ -1,15 +1,18 @@
 <template>
   <div :id="`note-${note.id}-outer`" class="advising-note-outer">
-    <div :id="`note-${note.id}-is-closed`" :class="{'truncate-with-ellipsis': !isOpen}" aria-label="Advising note">
+    <div :id="`note-${note.id}-is-closed`" :class="{'note-snippet-when-closed truncate-with-ellipsis': !isOpen}" aria-label="Advising note">
       <span v-if="note.isDraft" :id="`note-${note.id}-is-draft`">
         <span class="pr-2">
-          <b-badge pill variant="danger">Draft</b-badge>
+          <v-badge rounded color="warning">Draft</v-badge>
         </span>
         <span :id="`note-${note.id}-subject`">{{ note.subject || config.draftNoteSubjectPlaceholder }}</span>
       </span>
       <span v-if="!note.isDraft">
         <span v-if="note.subject" :id="`note-${note.id}-subject`">{{ note.subject }}</span>
-        <span v-if="!note.subject && size(note.message)" :id="`note-${note.id}-subject`" v-html="note.message"></span>
+        <span v-if="!note.subject && size(note.message)" :id="`note-${note.id}-subject`">
+          <span v-if="isOpen" v-html="note.message" />
+          <span v-if="!isOpen" v-html="stripHtmlAndTrim(note.message).replace(/\n\r/g, ' ')" />
+        </span>
         <span v-if="!note.subject && !size(note.message) && note.category" :id="`note-${note.id}-subject`">{{ note.category }}<span v-if="note.subcategory">, {{ note.subcategory }}</span></span>
         <span v-if="!note.subject && !size(note.message) && !note.category && !note.eForm" :id="`note-${note.id}-category-closed`">{{ !isEmpty(note.author.departments) ? note.author.departments[0].name : '' }}
           advisor {{ author.name }}<span v-if="note.topics && size(note.topics)">: {{ oxfordJoin(note.topics) }}</span>
@@ -79,7 +82,7 @@
           </div>
         </dl>
       </div>
-      <div v-if="!isNil(author) && !author.name && !author.email && !note.eForm" class="mt-2 text-black-50 advisor-profile-not-found">
+      <div v-if="!isNil(author) && !author.name && !author.email && !note.eForm" class="font-size-14 mt-2 text-black-50">
         Advisor profile not found
         <span v-if="note.legacySource" class="font-italic">
           (note imported from {{ note.legacySource }})
@@ -115,13 +118,12 @@
         </div>
       </div>
       <div v-if="note.topics && size(note.topics)">
-        <div class="pill-list-header mt-3 mb-1">{{ size(note.topics) === 1 ? 'Topic Category' : 'Topic Categories' }}</div>
+        <div class="pill-list-header mt-3">{{ size(note.topics) === 1 ? 'Topic Category' : 'Topic Categories' }}</div>
         <ul class="pill-list pl-0">
           <li
             v-for="(topic, index) in note.topics"
             :id="`note-${note.id}-topic-${index}`"
             :key="topic"
-            class="mt-2"
           >
             <span class="pill pill-attachment text-uppercase text-no-wrap">{{ topic }}</span>
           </li>
@@ -150,7 +152,7 @@
           :key="attachment.name"
           class="mt-2"
         >
-          <span class="pill pill-attachment text-no-wrap">
+          <span class="pill text-no-wrap">
             <a
               :id="`note-${note.id}-attachment-${index}`"
               :href="downloadUrl(attachment)"
@@ -197,13 +199,17 @@
             >
               Select File
             </v-btn>
-            <b-form-file
+            <v-file-input
               ref="attachment-file-input"
               v-model="attachments"
+              density="comfortable"
               :disabled="size(existingAttachments) === config.maxAttachmentsPerNote"
-              :state="Boolean(attachments && attachments.length)"
-              :multiple="true"
-              :plain="true"
+              flat
+              hide-details
+              multiple
+              :prepend-icon="null"
+              single-line
+              variant="solo-filled"
             />
           </div>
         </div>
@@ -216,11 +222,12 @@
 </template>
 
 <script setup>
+import AreYouSureModal from '@/components/util/AreYouSureModal'
 import {mdiAlertRhombus, mdiCloseCircleOutline, mdiPaperclip, mdiSync} from '@mdi/js'
+import {stripHtmlAndTrim} from '@/lib/utils'
 </script>
 
 <script>
-import AreYouSureModal from '@/components/util/AreYouSureModal'
 import {addAttachments, removeAttachment} from '@/api/notes'
 import {addFileDropEventListeners, validateAttachment} from '@/lib/note'
 import {cloneDeep, each, get, isEmpty, isNil, map, orderBy, size} from 'lodash'
@@ -232,7 +239,6 @@ import {useContextStore} from '@/stores/context'
 
 export default {
   name: 'AdvisingNote',
-  components: {AreYouSureModal},
   props: {
     afterSaved: {
       required: true,
@@ -269,6 +275,9 @@ export default {
   computed: {
     authorDepartments() {
       return orderBy(map(this.author.departments, 'name'))
+    },
+    currentUser() {
+      return useContextStore().currentUser
     },
     isEditable() {
       return !this.note.legacySource
@@ -419,7 +428,10 @@ export default {
 .advising-note-outer {
   flex-basis: 100%;
 }
-.advisor-profile-not-found {
-  font-size: 14px;
+.note-snippet-when-closed {
+  height: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

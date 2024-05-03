@@ -1,68 +1,76 @@
 <template>
-  <div v-if="isExpandAllAvailable" class="timeline-submenu">
+  <div v-if="isExpandAllAvailable" class="align-center d-flex flex-wrap font-size-14 mt-2">
     <h3 class="sr-only">Quick Links</h3>
-    <v-btn
-      :id="`toggle-expand-all-${filter}s`"
-      class="pr-1"
-      variant="text"
-      @click.prevent="toggleExpandAll"
-    >
-      <v-icon
-        :icon="allExpanded ? mdiMenuDown : mdiMenuRight"
-        class="toggle-expand-all-caret"
-      />
-      <span class="text-no-wrap pl-1">{{ allExpanded ? 'Collapse' : 'Expand' }} all {{ filter }}s</span>
-    </v-btn>
-    <div v-if="showDownloadNotesLink">
-      | <a id="download-notes-link" class="p-2" :href="`${config.apiBaseUrl}/api/notes/${student.sid}/download?type=${filter}`">Download {{ filter }}s</a>
+    <div class="ml-2">
+      <v-btn
+        :id="`toggle-expand-all-${filter}s`"
+        class="px-0"
+        density="compact"
+        :disabled="!messagesVisible.length"
+        variant="plain"
+        @click.prevent="toggleExpandAll"
+      >
+        <v-icon :icon="allExpanded ? mdiMenuDown : mdiMenuRight" />
+        <span class="text-no-wrap">{{ allExpanded ? 'Collapse' : 'Expand' }} all {{ filter }}s</span>
+      </v-btn>
     </div>
-    |
-    <div>
+    <div v-if="showDownloadNotesLink" class="ml-3">|</div>
+    <div v-if="showDownloadNotesLink" class="ml-3">
+      <a id="download-notes-link" :href="`${config.apiBaseUrl}/api/notes/${student.sid}/download?type=${filter}`">Download {{ filter }}s</a>
+    </div>
+    <div class="ml-3">|</div>
+    <div class="align-center d-flex ml-3">
       <label
         :id="`timeline-${filter}s-query-label`"
         :for="`timeline-${filter}s-query-input`"
-        class="mb-0 ml-2 mr-1 text-no-wrap"
+        class="font-weight-bold mb-0 mr-1 text-no-wrap v-btn--variant-plain"
       >
-        Search {{ filter === 'eForm' ? 'eForm' : _capitalize(filter) }}s:
+        Search {{ filter === 'eForm' ? 'eForm' : capitalize(filter) }}s:
       </label>
-    </div>
-    <div class="pr-1">
       <v-text-field
         :id="`timeline-${filter}s-query-input`"
         v-model="timelineQuery"
         :aria-labelledby="`timeline-${filter}s-query-label`"
-        class="pl-2 pr-2 timeline-query-input"
+        bg-color="pale-blue"
+        class="academic-timeline-search-input"
+        color="primary"
+        density="compact"
+        flat
+        hide-details
         type="search"
+        variant="outlined"
       />
     </div>
-    |
-    <div v-if="showMyNotesToggle">
-      <v-btn
-        id="toggle-my-notes-button"
-        @click="toggleMyNotes"
-        @keyup.down="toggleMyNotes"
-      >
-        <div class="toggle-label">
-          <span :class="{'toggle-label-active': !showMyNotesOnly}">
-            All {{ filter }}s
-          </span>
-          <span class="px-1">
-            <v-icon v-if="showMyNotesOnly" :icon="mdiToggleSwitch" class="toggle toggle-on" />
-            <v-icon v-if="!showMyNotesOnly" :icon="mdiToggleSwitchOffOutline" class="toggle toggle-off" />
-          </span>
-          <span :class="{'toggle-label-active': showMyNotesOnly}">
-            My {{ filter }}s
-          </span>
+    <div class="ml-3">|</div>
+    <div v-if="showMyNotesToggle" class="ml-3">
+      <div class="align-center d-flex font-weight-bold">
+        <label for="toggle-my-notes-button" class="mr-3" :class="showMyNotesOnly ? 'text-grey' : 'text-primary'">
+          All {{ filter }}s
+        </label>
+        <div class="mr-3">
+          <v-switch
+            id="toggle-my-notes-button"
+            v-model="showMyNotesOnly"
+            density="compact"
+            color="primary"
+            hide-details
+          />
         </div>
-      </v-btn>
+        <label for="toggle-my-notes-button" :class="showMyNotesOnly ? 'text-primary' : 'text-grey'">
+          My {{ filter }}s
+        </label>
+      </div>
     </div>
   </div>
 
-  <div v-if="!countPerActiveTab" class="pb-4 pl-2">
-    <h3 id="zero-messages" class="messages-none">
-      <span v-if="filter">No {{ filterTypes[filter].name.toLowerCase() }}s</span>
-      <span v-if="!filter">None</span>
-    </h3>
+  <div
+    v-if="!searchResults && !messagesVisible.length"
+    id="zero-messages"
+    class="font-size-16 font-weight-700 ml-6 my-4 text-grey-darken-1"
+  >
+    <span v-if="filter && showMyNotesOnly">No {{ filterTypes[filter].name.toLowerCase() }}s authored by you.</span>
+    <span v-if="filter && !showMyNotesOnly">No {{ filterTypes[filter].name.toLowerCase() }}s</span>
+    <span v-if="!filter">None</span>
   </div>
 
   <div v-if="searchResults" class="ml-3 my-2">
@@ -74,7 +82,7 @@
   </div>
 
   <div v-if="countPerActiveTab">
-    <h3 class="sr-only">{{ activeTab === 'all' ? 'All Messages' : `${_capitalize(activeTab)}s` }}</h3>
+    <h3 class="sr-only">{{ activeTab === 'all' ? 'All Messages' : `${capitalize(activeTab)}s` }}</h3>
     <table id="timeline-messages" class="w-100">
       <tr class="sr-only">
         <th>Type</th>
@@ -82,7 +90,7 @@
         <th>Details</th>
         <th>Date</th>
       </tr>
-      <tr v-if="creatingNoteEvent" class="message-row-read message-row border-top border-bottom">
+      <tr v-if="creatingNoteEvent" class="message-row border-t-sm border-b-sm">
         <td class="column-pill align-top p-2">
           <div class="pill text-center text-uppercase text-white pill-note">
             <span class="sr-only">Creating new</span> advising note
@@ -109,11 +117,10 @@
         </td>
       </tr>
       <tr
-        v-for="(message, index) in (searchResults || (isShowingAll ? messagesPerType(filter) : _slice(messagesPerType(filter), 0, defaultShowPerTab)))"
+        v-for="(message, index) in messagesVisible"
         :id="`permalink-${message.type}-${message.id}`"
         :key="index"
-        :class="{'message-row-read': message.read}"
-        class="message-row border-top border-bottom"
+        class="message-row"
       >
         <td class="column-pill align-top p-2">
           <div
@@ -121,14 +128,14 @@
             :class="`pill-${message.type}`"
             class="pill text-center text-uppercase text-white"
             :role="message.type === 'requirement' ? 'cell' : 'button'"
-            :tabindex="_includes(openMessages, message.transientId) ? -1 : 0"
+            :tabindex="includes(openMessages, message.transientId) ? -1 : 0"
             @keyup.enter="open(message, true)"
             @click="open(message, true)"
           >
             <span class="sr-only">Message of type </span>{{ filterTypes[message.type].name }}
           </div>
           <div
-            v-if="isEditable(message) && !editModeNoteId && _includes(openMessages, message.transientId)"
+            v-if="isEditable(message) && !editModeNoteId && includes(openMessages, message.transientId)"
             class="mt-2"
           >
             <div v-if="currentUser.uid === message.author.uid && (!message.isPrivate || currentUser.canAccessPrivateNotes)">
@@ -165,14 +172,14 @@
         >
           <div
             :id="`timeline-tab-${activeTab}-message-${index}`"
-            :aria-pressed="_includes(openMessages, message.transientId)"
+            :aria-pressed="includes(openMessages, message.transientId)"
             :class="{
-              'align-top message-open': _includes(openMessages, message.transientId) && message.type !== 'requirement' ,
-              'truncate': !_includes(openMessages, message.transientId),
+              'align-top message-open': includes(openMessages, message.transientId) && message.type !== 'requirement' ,
+              'truncate': !includes(openMessages, message.transientId),
               'img-blur': currentUser.inDemoMode && ['appointment', 'eForm', 'note'].includes(message.type)
             }"
             :role="message.type === 'requirement' ? '' : 'button'"
-            :tabindex="_includes(openMessages, message.transientId) ? -1 : 0"
+            :tabindex="includes(openMessages, message.transientId) ? -1 : 0"
             @keyup.enter="open(message, true)"
             @click="open(message, true)"
           >
@@ -180,13 +187,13 @@
             <v-icon v-if="message.status === 'Satisfied'" :icon="mdiCheckBold" class="requirements-icon text-success" />
             <v-icon v-if="message.status === 'Not Satisfied'" :icon="mdiExclamationThick" class="requirements-icon text-icon-exclamation" />
             <v-icon v-if="message.status === 'In Progress'" :icon="mdiClockOutline" class="requirements-icon text-icon-clock" />
-            <span v-if="!_includes(['appointment', 'eForm', 'note'] , message.type)">{{ message.message }}</span>
+            <span v-if="!includes(['appointment', 'eForm', 'note'] , message.type)">{{ message.message }}</span>
             <AdvisingNote
               v-if="['eForm', 'note'].includes(message.type) && message.id !== editModeNoteId"
               :after-saved="afterNoteEdit"
               :delete-note="deleteNote"
               :edit-note="editNote"
-              :is-open="_includes(openMessages, message.transientId)"
+              :is-open="includes(openMessages, message.transientId)"
               :note="message"
             />
             <EditAdvisingNote
@@ -198,19 +205,24 @@
             <AdvisingAppointment
               v-if="message.type === 'appointment'"
               :appointment="message"
-              :is-open="_includes(openMessages, message.transientId)"
+              :is-open="includes(openMessages, message.transientId)"
               :student="student"
             />
-            <div v-if="_includes(openMessages, message.transientId) && message.id !== editModeNoteId" class="text-center close-message">
+            <div
+              v-if="includes(openMessages, message.transientId) && message.id !== editModeNoteId"
+              class="mb-1 text-center close-message"
+            >
               <v-btn
                 :id="`${activeTab}-close-message-${message.id}`"
+                color="primary"
+                density="compact"
                 variant="text"
                 @keyup.enter.stop="close(message, true)"
                 @click.stop="close(message, true)"
               >
-                <div class="d-flex">
+                <div class="align-center d-flex">
                   <div class="mr-1">
-                    <v-icon :icon="mdiCloseCircleOutline" class="font-size-24" />
+                    <v-icon :icon="mdiCloseCircle" size="18" />
                   </div>
                   <div class="text-no-wrap">
                     Close Message
@@ -220,28 +232,28 @@
             </div>
           </div>
         </td>
-        <td class="column-right align-top pt-1 pr-1">
-          <div v-if="!_includes(openMessages, message.transientId) && message.type === 'appointment'">
+        <td class="column-right align-content-top pr-1">
+          <div v-if="!includes(openMessages, message.transientId) && message.type === 'appointment'">
             <div
               v-if="message.createdBy === 'YCBM' && message.status === 'cancelled'"
               :id="`collapsed-${message.type}-${message.id}-status-cancelled`"
-              class="collapsed-cancelled-icon"
+              class="collapsed-cancelled-icon text-red-lighten-2"
             >
-              <v-icon :icon="mdiCalendarMinus" class="status-cancelled-icon " />
+              <v-icon :icon="mdiCalendarMinus" class="status-cancelled-icon" />
               Canceled
             </div>
           </div>
           <div v-if="['appointment', 'eForm', 'note'].includes(message.type)">
-            <v-icon v-if="_size(message.attachments)" :icon="mdiPaperclip" class="mt-2" />
-            <span class="sr-only">{{ _size(message.attachments) ? 'Has attachments' : 'No attachments' }}</span>
+            <v-icon v-if="size(message.attachments)" color="info" :icon="mdiPaperclip" />
+            <span class="sr-only">{{ size(message.attachments) ? 'Has attachments' : 'No attachments' }}</span>
           </div>
         </td>
-        <td class="column-right align-top">
+        <td class="column-right align-content-start">
           <div
             :id="`timeline-tab-${activeTab}-date-${index}`"
             class="pt-2 pr-2 text-no-wrap"
           >
-            <div v-if="!_includes(openMessages, message.transientId) || !_includes(['appointment', 'eForm', 'note'], message.type)">
+            <div v-if="!includes(openMessages, message.transientId) || !includes(['appointment', 'eForm', 'note'], message.type)">
               <TimelineDate
                 :id="`collapsed-${message.type}-${message.id}-created-at`"
                 :date="message.setDate || message.updatedAt || message.createdAt"
@@ -249,7 +261,7 @@
                 :sr-prefix="message.type === 'appointment' ? 'Appointment date' : 'Last updated on'"
               />
             </div>
-            <div v-if="_includes(openMessages, message.transientId) && ['appointment', 'eForm', 'note'].includes(message.type)">
+            <div v-if="includes(openMessages, message.transientId) && ['appointment', 'eForm', 'note'].includes(message.type)">
               <div v-if="message.createdAt" :class="{'mb-2': !displayUpdatedAt(message)}">
                 <div class="text-grey-darken-2">{{ message.type === 'appointment' ? 'Appt Date' : 'Created' }}:</div>
                 <TimelineDate
@@ -305,6 +317,8 @@
       <v-btn
         :id="`timeline-tab-${activeTab}-previous-messages`"
         class="text-no-wrap pr-2 pt-0"
+        color="primary"
+        density="compact"
         variant="text"
         @click="isShowingAll = !isShowingAll"
       >
@@ -326,25 +340,28 @@
 </template>
 
 <script setup>
+import AdvisingAppointment from '@/components/appointment/AdvisingAppointment'
+import AdvisingNote from '@/components/note/AdvisingNote'
+import AreYouSureModal from '@/components/util/AreYouSureModal'
+import EditAdvisingNote from '@/components/note/EditAdvisingNote'
+import TimelineDate from '@/components/student/profile/TimelineDate'
 import {
   mdiCalendarMinus,
-  mdiCheckBold, mdiClockOutline, mdiCloseCircleOutline,
-  mdiExclamationThick, mdiLinkVariant,
+  mdiCheckBold,
+  mdiClockOutline,
+  mdiCloseCircle,
+  mdiExclamationThick,
+  mdiLinkVariant,
   mdiMenuDown,
-  mdiMenuRight, mdiMenuUp, mdiPaperclip,
-  mdiSync,
-  mdiToggleSwitch,
-  mdiToggleSwitchOffOutline
+  mdiMenuRight,
+  mdiMenuUp,
+  mdiPaperclip,
+  mdiSync
 } from '@mdi/js'
 </script>
 
 <script>
-import AdvisingAppointment from '@/components/appointment/AdvisingAppointment'
-import AdvisingNote from '@/components/note/AdvisingNote'
-import AreYouSureModal from '@/components/util/AreYouSureModal'
 import Context from '@/mixins/Context'
-import EditAdvisingNote from '@/components/note/EditAdvisingNote'
-import TimelineDate from '@/components/student/profile/TimelineDate'
 import Util from '@/mixins/Util'
 import {deleteNote, getNote, markNoteRead} from '@/api/notes'
 import {dismissStudentAlert} from '@/api/student'
@@ -352,16 +369,10 @@ import {markAppointmentRead} from '@/api/appointments'
 import {isDirector} from '@/berkeley'
 import {scrollTo} from '@/lib/utils'
 import {DateTime} from 'luxon'
+import {capitalize, each, find, includes, map, remove, size, slice} from 'lodash'
 
 export default {
   name: 'AcademicTimelineTable',
-  components: {
-    AdvisingAppointment,
-    AdvisingNote,
-    AreYouSureModal,
-    EditAdvisingNote,
-    TimelineDate
-  },
   mixins: [Context, Util],
   props: {
     countsPerType: {
@@ -416,13 +427,16 @@ export default {
       return location.hash
     },
     countPerActiveTab() {
-      return this.filter ? this.countsPerType[this.filter] : this._size(this.messages)
+      return this.filter ? this.countsPerType[this.filter] : size(this.messages)
     },
     deleteConfirmModalBody() {
       return this.messageForDelete ? `Are you sure you want to delete the "<b>${this.messageForDelete.subject}</b>" note?` : ''
     },
     isExpandAllAvailable() {
       return ['appointment', 'eForm', 'note'].includes(this.filter)
+    },
+    messagesVisible() {
+      return (this.searchResults || (this.isShowingAll ? this.messagesPerType(this.filter) : slice(this.messagesPerType(this.filter), 0, this.defaultShowPerTab)))
     },
     offerShowAll() {
       return !this.searchResults && (this.countPerActiveTab > this.defaultShowPerTab)
@@ -433,7 +447,7 @@ export default {
     showDownloadNotesLink() {
       const hasNonDrafts = () => {
         const notes = this.messagesPerType('note')
-        return this._find(notes, n => !n.isDraft)
+        return find(notes, n => !n.isDraft)
       }
       return ['eForm', 'note'].includes(this.filter)
         && (this.currentUser.isAdmin || isDirector(this.currentUser))
@@ -459,7 +473,7 @@ export default {
       if (this.timelineQuery) {
         const query = this.timelineQuery.replace(/\s/g, '').toLowerCase()
         const results = []
-        this._each(this.searchIndex, entry => {
+        each(this.searchIndex, entry => {
           if (entry.idx.indexOf(query) > -1) {
             results.push(entry.message)
           }
@@ -479,7 +493,7 @@ export default {
         'note-updated': this.afterNoteEdit,
         'notes-created': this.afterNotesCreated
       }
-      this._each(this.eventHandlers, (handler, eventType) => {
+      each(this.eventHandlers, (handler, eventType) => {
         this.setEventHandler(eventType, handler)
       })
     }
@@ -492,7 +506,7 @@ export default {
       if (match && match.length > 2) {
         const messageType = match[1].toLowerCase()
         const messageId = match[2]
-        const obj = this._find(this.messages, function(m) {
+        const obj = find(this.messages, function(m) {
           // Legacy advising notes have string IDs; BOA-created advising notes have integer IDs.
           if (m.id && m.id.toString() === messageId && m.type.toLowerCase() === messageType) {
             return true
@@ -510,7 +524,7 @@ export default {
     }
   },
   destroyed() {
-    this._each(this.eventHandlers || {}, (handler, eventType) => {
+    each(this.eventHandlers || {}, (handler, eventType) => {
       this.removeEventHandler(eventType, handler)
     })
   },
@@ -546,8 +560,8 @@ export default {
       if (this.editModeNoteId) {
         return false
       }
-      if (this._includes(this.openMessages, message.transientId)) {
-        this.openMessages = this._remove(
+      if (includes(this.openMessages, message.transientId)) {
+        this.openMessages = remove(
           this.openMessages,
           id => id !== message.transientId
         )
@@ -556,7 +570,7 @@ export default {
         this.allExpanded = false
       }
       if (notifyScreenReader) {
-        this.alertScreenReader(`${this._capitalize(message.type)} closed`)
+        this.alertScreenReader(`${capitalize(message.type)} closed`)
       }
     },
     deleteNote(message) {
@@ -567,9 +581,9 @@ export default {
     deleteConfirmed() {
       const transientId = this.messageForDelete.transientId
       const predicate = ['transientId', transientId]
-      const note = this._find(this.messages, predicate)
-      this._remove(this.messages, predicate)
-      this._remove(this.openMessages, value => transientId === value)
+      const note = find(this.messages, predicate)
+      remove(this.messages, predicate)
+      remove(this.openMessages, value => transientId === value)
       this.messageForDelete = undefined
       return deleteNote(note).then(() => {
         this.alertScreenReader('Note deleted')
@@ -592,10 +606,8 @@ export default {
       this.putFocusNextTick('edit-note-subject')
     },
     getSameDayDate(message) {
-      let startsAt = DateTime.fromJSDate(message.createdAt).setZone(this.config.timezone).toFormat('h:mma')
-      let endsAt = DateTime.fromJSDate(message.endsAt).setZone(this.config.timezone).toFormat('h:mma')
-
-      return `${startsAt}-${endsAt}`
+      const format = isoDate => DateTime.fromISO(isoDate).setZone(this.config.timezone).toFormat('h:mm a')
+      return `${format(message.createdAt)} - ${format(message.endsAt)}`
     },
     id(rowIndex) {
       return `timeline-tab-${this.activeTab}-message-${rowIndex}`
@@ -606,7 +618,7 @@ export default {
     markRead(message) {
       if (!message.read) {
         message.read = true
-        if (this._includes(['alert', 'hold'], message.type)) {
+        if (includes(['alert', 'hold'], message.type)) {
           dismissStudentAlert(message.id)
         } else if (['eForm', 'note'].includes(message.type)) {
           markNoteRead(message.id)
@@ -620,7 +632,7 @@ export default {
         return this.messages
       } else if (this.showMyNotesToggle && this.showMyNotesOnly) {
         return this._filter(this.messages, m => {
-          let uid = (m.author && m.author.uid) || (m.advisor && m.advisor.uid)
+          const uid = (m.author && m.author.uid) || (m.advisor && m.advisor.uid)
           return m.type === type && uid === this.currentUser.uid
         })
       } else {
@@ -628,7 +640,7 @@ export default {
       }
     },
     onNoteCreateStartEvent(event) {
-      if (this._includes(event.completeSidSet, this.student.sid)) {
+      if (includes(event.completeSidSet, this.student.sid)) {
         this.creatingNoteEvent = event
       }
     },
@@ -636,7 +648,7 @@ export default {
       if (['eForm', 'note'].includes(message.type) && message.id === this.editModeNoteId || message.type === 'requirement') {
         return false
       }
-      if (!this._includes(this.openMessages, message.transientId)) {
+      if (!includes(this.openMessages, message.transientId)) {
         this.openMessages.push(message.transientId)
       }
       this.markRead(message)
@@ -644,11 +656,11 @@ export default {
         this.allExpanded = true
       }
       if (notifyScreenReader) {
-        this.alertScreenReader(`${this._capitalize(message.type)} opened`)
+        this.alertScreenReader(`${capitalize(message.type)} opened`)
       }
     },
     refreshNote(updatedNote) {
-      const note = this._find(this.messages, ['id', updatedNote.id])
+      const note = find(this.messages, ['id', updatedNote.id])
       if (note) {
         note.attachments = updatedNote.attachments
         note.body = note.message = updatedNote.body
@@ -665,11 +677,11 @@ export default {
     refreshSearchIndex() {
       this.searchIndex = []
       const messages = ['appointment', 'eForm', 'note'].includes(this.filter) ? this.messagesPerType(this.filter) : []
-      this._each(messages, m => {
+      each(messages, m => {
         const advisor = m.author || m.advisor
         const idx = [
           advisor.name,
-          (this._map(advisor.departments || [], 'name')).join(),
+          (map(advisor.departments || [], 'name')).join(),
           advisor.email,
           m.body,
           m.category,
@@ -692,21 +704,29 @@ export default {
       this.isShowingAll = true
       this.allExpanded = !this.allExpanded
       if (this.allExpanded) {
-        this._each(this.messagesPerType(this.filter), this.open)
+        each(this.messagesPerType(this.filter), this.open)
         this.alertScreenReader(`All ${this.filter}s expanded`)
       } else {
-        this._each(this.messagesPerType(this.filter), this.close)
+        each(this.messagesPerType(this.filter), this.close)
         this.alertScreenReader(`All ${this.filter}s collapsed`)
       }
-    },
-    toggleMyNotes() {
-      this.showMyNotesOnly = !this.showMyNotesOnly
-      this.alertScreenReader(`Showing ${this.showMyNotesOnly ? 'only my' : 'all'} ${this.filter}s`)
     }
   }
 }
 </script>
+
+<style>
+.academic-timeline-search-input input {
+  max-height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 10px;
+}
+</style>
+
 <style scoped>
+.academic-timeline-search-input {
+  width: 200px;
+}
 .close-message {
   width: 100%;
   order: -1;
@@ -714,8 +734,7 @@ export default {
 .collapsed-cancelled-icon {
   font-size: 14px;
   min-width: 108px;
-  padding-top: 6px;
-  padding-right: 6px;
+  padding-right: 8px;
   text-transform: uppercase;
 }
 .column-message {
@@ -724,6 +743,8 @@ export default {
   vertical-align: middle;
 }
 .column-pill {
+  padding: 8px;
+  vertical-align: top;
   white-space: nowrap;
   width: 100px;
 }
@@ -733,10 +754,6 @@ export default {
 }
 .edit-note-button {
   font-size: 15px;
-}
-.messages-none {
-  font-size: 16px;
-  font-weight: bolder;
 }
 .message-open {
   flex-flow: row wrap;
@@ -750,9 +767,6 @@ export default {
 .message-row:focus,
 .message-row:hover {
   background-color: #e3f5ff;
-}
-.message-row-read {
-  background-color: #f9f9f9;
 }
 .pill-alert {
   background-color: #eb9d3e;
@@ -788,41 +802,5 @@ export default {
 }
 .text-icon-exclamation {
   color: rgb(var(--v-theme-warning));
-}
-.timeline-query-input {
-  box-sizing: border-box;
-  border: 2px solid #ccc;
-  border-radius: 4px;
-  height: 30px;
-}
-.timeline-submenu {
-  align-items: center;
-  display: flex;
-}
-.toggle {
- font-size: 20px;
-}
-.toggle-btn-column {
-  min-height: 28px;
-  min-width: 36px;
-}
-.toggle-expand-all-caret {
-  width: 15px;
-}
-.toggle-label {
-  color: #999999;
-  display: flex;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-.toggle-label-active {
-  color: #000000;
-  font-weight: 600;
-}
-.toggle-off {
-   color: #999999;
-}
-.toggle-on {
-   color: #00c13a;
 }
 </style>

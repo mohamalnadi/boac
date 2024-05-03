@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="!cohort.cohortId && cohort.totalStudentCount === undefined" class="pb-3">
+    <div v-if="!cohort.cohortId && cohort.totalStudentCount === undefined">
       <h1 id="create-cohort-h1" class="page-section-header">
         Create {{ cohort.domain === 'default' ? 'a Cohort' : 'an admissions cohort' }}
       </h1>
@@ -11,7 +11,7 @@
         Find a set of admitted students using the filters below.
       </div>
     </div>
-    <div v-if="!renameMode" class="d-flex flex-wrap justify-space-between pb-3">
+    <div v-if="!renameMode" class="d-flex flex-wrap justify-space-between">
       <h1
         v-if="cohort.cohortName"
         id="cohort-name"
@@ -34,7 +34,7 @@
         <v-btn
           v-if="cohort.cohortId && size(cohort.filters)"
           id="show-hide-details-button"
-          class="font-size-15 text-no-wrap px-2"
+          class="font-size-15 px-1 text-no-wrap"
           color="anchor"
           variant="text"
           @click="toggleShowHideDetails"
@@ -51,7 +51,7 @@
         <v-btn
           v-if="cohort.cohortId && cohort.isOwnedByCurrentUser"
           id="rename-button"
-          class="font-size-15 px-2"
+          class="font-size-15 px-1 text-no-wrap"
           color="anchor"
           variant="text"
           @click="beginRename"
@@ -68,7 +68,7 @@
         <v-btn
           v-if="cohort.cohortId && cohort.isOwnedByCurrentUser"
           id="delete-button"
-          class="font-size-15 px-2"
+          class="font-size-15 px-1 text-no-wrap"
           color="anchor"
           variant="text"
           @click="showDeleteModal = true"
@@ -86,7 +86,7 @@
           v-if="cohort.domain === 'default' && (cohort.cohortId || cohort.totalStudentCount !== undefined)"
           id="export-student-list-button"
           :disabled="!exportEnabled || !cohort.totalStudentCount || cohort.isModifiedSinceLastSearch"
-          class="font-size-15 text-no-wrap px-2"
+          class="font-size-15 px-1 text-no-wrap"
           color="anchor"
           variant="text"
           @click="showExportStudentsModal = true"
@@ -96,7 +96,7 @@
         <v-btn
           v-if="cohort.domain === 'admitted_students' && (cohort.cohortId || cohort.totalStudentCount !== undefined)"
           id="export-student-list-button"
-          class="font-size-15 text-no-wrap px-2"
+          class="font-size-15 px-1 text-no-wrap"
           color="anchor"
           :disabled="!exportEnabled || !cohort.totalStudentCount || cohort.isModifiedSinceLastSearch"
           variant="text"
@@ -114,7 +114,7 @@
         <v-btn
           v-if="isHistorySupported"
           id="show-cohort-history-button"
-          class="font-size-15 px-2"
+          class="font-size-15 px-1 text-no-wrap"
           color="anchor"
           :disabled="cohort.isModifiedSinceLastSearch"
           variant="text"
@@ -126,7 +126,7 @@
       <div v-if="showHistory" class="d-flex align-self-baseline mr-4">
         <v-btn
           id="show-cohort-history-button"
-          class="font-size-15 text-no-wrap px-2"
+          class="font-size-15 px-1 text-no-wrap"
           color="anchor"
           variant="text"
           @click="toggleShowHistory(false)"
@@ -138,7 +138,7 @@
     <RenameCohort
       :cancel="cancelRename"
       :is-open="renameMode"
-    ></RenameCohort>
+    />
     <DeleteCohortModal
       id="confirm-delete-modal"
       :cancel-delete-modal="cancelDeleteModal"
@@ -165,30 +165,25 @@
 </template>
 
 <script setup>
-import {get, size} from 'lodash'
-import {getCsvExportColumns, getCsvExportColumnsSelected} from '@/berkeley'
-import {pluralize} from '@/lib/utils'
-import {putFocusNextTick} from '@/lib/utils'
-import router from '@/router'
-import {useCohortStore} from '@/stores/cohort-edit-session'
-import {useContextStore} from '@/stores/context'
-</script>
-
-<script>
 import DeleteCohortModal from '@/components/cohort/DeleteCohortModal'
 import ExportListModal from '@/components/util/ExportListModal'
 import FerpaReminderModal from '@/components/util/FerpaReminderModal'
 import RenameCohort from '@/components/cohort/RenameCohort'
+import {size} from 'lodash'
+import {getCsvExportColumns, getCsvExportColumnsSelected} from '@/berkeley'
+import {pluralize} from '@/lib/utils'
+</script>
+
+<script>
+import router from '@/router'
 import {deleteCohort, downloadCohortCsv, downloadCsv} from '@/api/cohort'
+import {get} from 'lodash'
+import {useCohortStore} from '@/stores/cohort-edit-session'
+import {useContextStore} from '@/stores/context'
+import {putFocusNextTick} from '@/lib/utils'
 
 export default {
   name: 'CohortPageHeader',
-  components: {
-    DeleteCohortModal,
-    ExportListModal,
-    FerpaReminderModal,
-    RenameCohort
-  },
   props: {
     showHistory: {
       type: Boolean,

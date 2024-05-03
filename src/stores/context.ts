@@ -11,9 +11,15 @@ const $_getDefaultApplicationState = () => ({
 })
 
 export type BoaConfig = {
+  currentEnrollmentTerm: undefined,
   currentEnrollmentTermId: undefined,
+  defaultTermUnitsAllowed: {
+    max: undefined,
+    min: undefined
+  },
   isProduction: boolean,
-  maxAttachmentsPerNote: number
+  maxAttachmentsPerNote: number,
+  timezone: string
 }
 
 export function alertScreenReader(message: string, politeness?: string) {
@@ -30,6 +36,7 @@ export const useContextStore = defineStore('context', {
     config: undefined as BoaConfig | undefined,
     currentUser: {
       canAccessAdvisingData: false,
+      canEditDegreeProgress: false,
       canReadDegreeProgress: false,
       inDemoMode: false,
       isAdmin: false,

@@ -23,12 +23,13 @@
         aria-hidden="true"
         location="bottom"
         :text="alertText"
-      ></v-tooltip>
+      />
     </PillAlert>
   </div>
 </template>
 
 <script setup>
+import avatarPlaceholder from '@/assets/avatar-50.png'
 import {isNil} from 'lodash'
 import {useContextStore} from '@/stores/context'
 </script>
@@ -77,7 +78,7 @@ export default {
   },
   methods: {
     avatarError() {
-      this.avatarUrl = '@/assets/avatar-50.png'
+      this.avatarUrl = avatarPlaceholder
     }
   }
 }

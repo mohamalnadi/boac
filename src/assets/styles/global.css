@@ -5,6 +5,40 @@
 .border-primary {
   border-color: rgb(var(--v-theme-primary)) !important;
 }
+.boxplot-container {
+  align-items: flex-end;
+  display: flex;
+}
+.boxplot-container .highcharts-tooltip {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  line-height: 1.4em;
+  min-width: 200px;
+  padding: 0;
+}
+.boxplot-container .highcharts-tooltip::after {
+  background: #fff;
+  border: 1px solid #aaa;
+  border-width: 0 1px 1px 0;
+  content: '';
+  display: block;
+  height: 10px;
+  position: absolute;
+  top: 75px;
+  left: -6px;
+  transform: rotate(135deg);
+  width: 10px;
+}
+.boxplot-container g.highcharts-tooltip {
+  display: none !important;
+}
+.boxplot-container .highcharts-tooltip span {
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: auto !important;
+}
 .choose-attachment-file-wrapper {
   position: relative;
   align-items: center;
@@ -109,8 +143,8 @@
 }
 .pill-attachment {
   display: inline-block;
-  height: 26px !important;
-  padding: 0 8px 1px 8px;
+  height: 24px !important;
+  padding: 2px 8px 0 8px;
 }
 .pill-attachment button {
   margin-top: .02rem;
@@ -145,15 +179,6 @@
 .position-relative {
   position: relative;
 }
-.red-flag-status {
-  color: #d0021b;
-  font-weight: bold;
-}
-.red-flag-small {
-  color: #d0021b;
-  font-size: 12px;
-  font-weight: bold;
-}
 .section-divider {
   background-color: #4a90e2;
   border: none;
@@ -185,14 +210,15 @@
   white-space: nowrap;
   border: 0;
 }
+.student-classes-expansion-panel button {
+  padding: 0 9px 0 9px;
+}
+.student-classes-expansion-text div {
+  padding: 0 3px 0 3px;
+}
 .student-column {
   flex: 0 0 120px;
   margin-left: 15px;
-}
-.student-name {
-  color: #49b;
-  font-size: 16px;
-  margin: 0;
 }
 .student-profile-h3 {
   border-bottom: 1px #999 solid;
@@ -218,6 +244,12 @@
 .student-text {
   color: #6e6e6e;
   font-size: 13px;
+}
+.truncate {
+  height: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .truncate-with-ellipsis {
   overflow: hidden;
@@ -252,6 +284,9 @@
 .vc-zindex-fix .vc-popover-content-wrapper, .vc-zindex-fix .vc-popover-content {
   overflow: visible;
   z-index: 1000 !important;
+}
+.vertical-top {
+  vertical-align: top !important;
 }
 .vh-100 {
   height: 100vh !important;

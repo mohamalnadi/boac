@@ -55,12 +55,12 @@
         <span
           v-if="row.item.enrollment.enrollmentStatus === 'W'"
           :id="`student-${row.item.uid}-waitlisted-for-${section.termId}-${section.sectionId}`"
-          class="red-flag-status"
+          class="error font-weight-bold"
         >WAITLISTED</span>
         <span
           v-if="row.item.academicCareerStatus === 'Inactive'"
           :id="`student-${row.item.uid}-inactive-for-${section.termId}-${section.sectionId}`"
-          class="red-flag-status"
+          class="error font-weight-bold"
         >INACTIVE</span>
         <span
           v-if="row.item.academicCareerStatus === 'Completed'"
@@ -74,14 +74,14 @@
       <div
         v-if="displayAsAscInactive(row.item)"
         :id="`student-${row.item.uid}-asc-inactive-for-${section.termId}-${section.sectionId}`"
-        class="student-sid red-flag-status"
+        class="student-sid error font-weight-bold"
       >
         ASC INACTIVE
       </div>
       <div
         v-if="displayAsCoeInactive(row.item)"
         :id="`student-${row.item.uid}-coe-inactive-for-${section.termId}-${section.sectionId}`"
-        class="student-sid red-flag-status"
+        class="student-sid error font-weight-bold"
       >
         CoE INACTIVE
       </div>
@@ -172,7 +172,7 @@
         <div
           v-for="canvasSite in row.item.enrollment.canvasSites"
           :key="canvasSite.canvasCourseId"
-          class="profile-boxplot-container"
+          class="boxplot-container"
         >
           <span v-if="row.item.enrollment.canvasSites.length > 1" class="sr-only">
             {{ canvasSite.courseCode }}
@@ -212,7 +212,7 @@
         <div
           v-for="canvasSite in row.item.enrollment.canvasSites"
           :key="canvasSite.canvasCourseId"
-          class="profile-boxplot-container"
+          class="boxplot-container"
         >
           <span v-if="row.item.enrollment.canvasSites.length > 1" class="sr-only">
             {{ canvasSite.courseCode }}
@@ -335,7 +335,6 @@ export default {
   flex: 0 0 50px;
 }
 .student-name {
-  color: #49b;
   font-size: 16px;
   max-width: 150px;
 }

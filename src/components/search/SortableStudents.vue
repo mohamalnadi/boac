@@ -1,16 +1,13 @@
 <template>
   <v-data-table-virtual
-    v-resize="onResize"
     :cell-props="{
-      class: 'pl-0'
+      class: 'pl-0 vertical-top',
+      style: $vuetify.display.mdAndUp ? 'max-width: 200px;' : ''
     }"
-    class="bg-transparent font-size-16"
-    density="compact"
-    :header-props="{
-      class: 'pl-0 text-no-wrap'
-    }"
+    :header-props="{class: 'pl-0'}"
     :headers="headers"
     :items="students"
+    mobile-breakpoint="md"
     no-sort-reset
     :sort-by="[sortBy]"
     :sort-compare="sortCompare"
@@ -40,7 +37,7 @@
     </template>
 
     <template #item.name="{item}">
-      <div class="text-no-wrap">
+      <div>
         <span class="sr-only">Student name</span>
         <router-link
           v-if="item.uid"
@@ -79,7 +76,7 @@
     </template>
 
     <template #item.sid="{item}">
-      <span class="sr-only">S I D </span>
+      <span class="sr-only">S I D<span aria-hidden="true">&nbsp;</span></span>
       <span :class="{'demo-mode-blur': currentUser.inDemoMode}">{{ item.sid }}</span>
     </template>
 
@@ -171,8 +168,7 @@ export default {
   data: () => ({
     headers: undefined,
     sortBy: undefined,
-    sortDescending: undefined,
-    stackTable: false
+    sortDescending: undefined
   }),
   watch: {
     sortBy() {
@@ -181,9 +177,6 @@ export default {
     sortDescending() {
       this.onChangeSortBy()
     }
-  },
-  mounted() {
-    this.onResize()
   },
   created() {
     this.sortBy = this.options.sortBy
@@ -207,7 +200,7 @@ export default {
         {key: 'enrolledUnits', sortable, title: 'Term units', value: 'term.enrolledUnits'},
         {key: 'cumulativeUnits', sortable, title: 'Units completed', value: 'cumulativeUnits'},
         {key: 'cumulativeGPA', sortable, title: 'GPA', value: 'cumulativeGPA'},
-        {align: 'end', key: 'alertCount', sortable, title: 'Alerts', value: 'alertCount'}
+        {align: 'end', class: 'alert-count', key: 'alertCount', sortable, title: 'Alerts', value: 'alertCount'}
       ])
     }
   },
@@ -219,9 +212,6 @@ export default {
       if (field) {
         this.alertScreenReader(`Sorted by ${field.title}${this.sortDescending ? ', descending' : ''}`)
       }
-    },
-    onResize() {
-      this.stackTable = this.$vuetify.display.mdAndDown
     },
     sortCompare(a, b, sortBy, sortDesc) {
       let aValue = get(a, sortBy)
@@ -249,8 +239,8 @@ export default {
 </script>
 
 <style>
-th.alert-count {
-  padding-right: 15px;
+th {
+  height: 36px !important;
 }
 .sortable-students-icon {
   margin-left: 5px;

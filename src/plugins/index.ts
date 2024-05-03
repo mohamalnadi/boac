@@ -2,6 +2,7 @@ import 'v-calendar/style.css'
 import axios from '@/plugins/axios'
 import CKEditor from '@ckeditor/ckeditor5-vue'
 import Highcharts from 'highcharts'
+import more from 'highcharts/highcharts-more'
 import VueHighcharts from 'vue-highcharts'
 import vuetify from './vuetify'
 import type {App} from 'vue'
@@ -19,4 +20,13 @@ export function registerPlugins (app: App) {
     .component('focus-trap', FocusTrap)
     .component('elegant-calendar', Calendar)
     .component('elegant-date-picker', DatePicker)
+    .directive('accessibleGrade', {
+      beforeMount(el, binding) {
+        el.innerHTML = binding.value && binding.value.replace('-', '&minus;').replace('+', '&plus;')
+      },
+      unmounted(el) {
+        el.innerHTML = ''
+      }
+    })
+  more(Highcharts)
 }

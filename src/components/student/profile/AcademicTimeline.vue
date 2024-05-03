@@ -1,14 +1,12 @@
 <template>
   <div v-if="!isTimelineLoading">
-    <div class="mb-2">
-      <AcademicTimelineHeader
-        :counts-per-type="countsPerType"
-        :filter="filter"
-        :filter-types="filterTypes"
-        :set-filter="setFilter"
-        :student="student"
-      />
-    </div>
+    <AcademicTimelineHeader
+      :counts-per-type="countsPerType"
+      :filter="filter"
+      :filter-types="filterTypes"
+      :set-filter="setFilter"
+      :student="student"
+    />
     <AcademicTimelineTable
       :counts-per-type="countsPerType"
       :filter="filter"
@@ -28,7 +26,6 @@ import Context from '@/mixins/Context'
 import Util from '@/mixins/Util'
 import {getNote} from '@/api/notes'
 import {DateTime} from 'luxon'
-
 
 export default {
   name: 'AcademicTimeline',

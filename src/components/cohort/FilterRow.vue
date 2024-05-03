@@ -1,22 +1,20 @@
 <template>
   <div
     v-if="showRow"
-    :class="{'pt-2': !isExistingFilter}"
-    class="d-flex flex-wrap"
+    class="align-center d-flex flex-wrap mt-2"
+    :class="{'filter-row': isExistingFilter}"
   >
     <div
       v-if="isExistingFilter"
       :id="`existing-filter-${position}`"
-      class="existing-filter-name px-2"
+      class="existing-filter-name font-weight-500 ml-4"
     >
       {{ get(filter, 'label.primary') }}<span class="sr-only"> is filter number {{ position }}</span>
     </div>
-    <div
-      v-if="isModifyingFilter && !isExistingFilter"
-      class="filter-row-column-01 mt-1 pr-2"
-    >
+    <div v-if="isModifyingFilter && !isExistingFilter" class="mr-2">
       <FilterSelect
         :filter-row-index="position"
+        :has-left-border-style="true"
         :labelledby="`new-filter-${position}-label`"
         :options="prepareFilterOptionGroups()"
         :set-model-object="value => (selectedFilter = value)"
@@ -24,12 +22,12 @@
         :v-model-object="selectedFilter"
       />
     </div>
-    <div v-if="!isModifyingFilter">
+    <div v-if="!isModifyingFilter" class="font-weight-500">
       <span class="sr-only">Selected filter value is </span>
       <span v-if="isUX('dropdown')">{{ getDropdownSelectedLabel() }}</span>
       <span v-if="isUX('range')">{{ rangeMinLabel() }} {{ rangeMaxLabel() }}</span>
     </div>
-    <div v-if="isModifyingFilter" class="filter-row-column-02 mt-1">
+    <div v-if="isModifyingFilter" class="mr-2">
       <div v-if="isUX('dropdown')">
         <span :id="`filter-secondary-${position}-label`" class="sr-only">{{ filter.name }} options</span>
         <FilterSelect
@@ -44,213 +42,190 @@
       <div
         v-if="isUX('range') && filter.validation === 'date'"
         :id="`filter-range-date-picker-${position}`"
-        class="vc-zindex-fix d-flex pr-1"
+        class="vc-zindex-fix"
       >
         <elegant-date-picker
-          ref="datePicker"
-          v-model.range.string="range"
+          v-model.range="range"
           hide-header
           is-required
-          mode="date"
           :masks="{modelValue: 'YYYY-MM-DD'}"
+          mode="date"
           :popover="{visibility: 'focus', autoHide: false}"
           :select-attribute="{key: 'today', dot: true, dates: new Date()}"
           @popover-did-show="onPopoverShown"
         >
-          <template #default="{ inputValue, inputEvents }">
-            <div class="d-flex pr-1">
-              <label
-                :for="`filter-range-min-${position}`"
-                class="pb-2"
-                :class="rangeMinLabel() ? 'filter-range-label-min' : ''"
-              >
+          <template #default="{inputValue, inputEvents}">
+            <div class="align-center d-flex">
+              <label class="font-weight-500 pl-0 pr-2" :for="`filter-range-min-${position}`">
                 {{ rangeMinLabel() }}
               </label>
               <div>
+                <span :id="`filter-range-min-placeholder-${position}`" class="sr-only">
+                  Start of range in format MM/DD/YYYY
+                </span>
                 <v-text-field
                   :id="`filter-range-min-${position}`"
-                  aria-label="beginning of range"
+                  v-model="inputValue.start"
                   :aria-describedby="`filter-range-min-placeholder-${position}`"
-                  class="filter-range-input"
-                  density="compact"
                   hide-details
-                  :model-value="inputValue.start"
                   :placeholder="placeholder()"
+                  size="12"
                   variant="outlined"
                   v-on="inputEvents.start"
-                  @focus="appendPopover"
-                  @mouseover="appendPopover"
                 />
-                <div class="filter-range-popover-container" />
-                <span :id="`filter-range-min-placeholder-${position}`" class="sr-only">MM/DD/YYYY</span>
               </div>
-              <label
-                :for="`filter-range-max-${position}`"
-                class="filter-range-label-max pb-2"
-              >
+              <label class="font-weight-500 px-2" :for="`filter-range-max-${position}`">
                 {{ rangeMaxLabel() }}
               </label>
               <div>
+                <span :id="`filter-range-max-placeholder-${position}`" class="sr-only">
+                  End of range in format MM/DD/YYYY
+                </span>
                 <v-text-field
                   :id="`filter-range-max-${position}`"
+                  v-model="inputValue.end"
                   aria-label="end of range"
                   :aria-describedby="`filter-range-max-placeholder-${position}`"
-                  class="filter-range-input"
-                  density="compact"
                   hide-details
-                  :model-value="inputValue.end"
                   :placeholder="placeholder()"
+                  size="12"
                   variant="outlined"
                   v-on="inputEvents.end"
-                  @focus="appendPopover"
-                  @mouseover="appendPopover"
                 />
-                <div class="filter-range-popover-container" />
-                <span :id="`filter-range-max-placeholder-${position}`" class="sr-only">MM/DD/YYYY</span>
               </div>
-              <div
-                v-if="size(errorPerRangeInput)"
-                class="sr-only"
-                aria-live="polite"
-              >
-                Error: {{ errorPerRangeInput }}
-              </div>
-              <v-tooltip
-                v-if="size(errorPerRangeInput)"
-                :show="true"
-                :target="`filter-range-max-${position}`"
-                placement="top"
-              >
-                <span class="text-error">{{ errorPerRangeInput }}</span>
-              </v-tooltip>
             </div>
           </template>
         </elegant-date-picker>
       </div>
-      <div v-if="isUX('range') && filter.validation !== 'date'" class="d-flex pr-1">
-        <label
-          :for="`filter-range-min-${position}`"
-          class="pb-2"
-          :class="rangeMinLabel() ? 'filter-range-label-min' : ''"
-        >
-          {{ rangeMinLabel() }}<span class="sr-only"> beginning of range</span>
+      <div v-if="isUX('range') && filter.validation !== 'date'" class="align-center d-flex mr-3">
+        <label class="font-weight-500 ml-2 pr-2" :for="`filter-range-min-${position}`">
+          {{ rangeMinLabel() }}<span class="sr-only"> starting at</span>
         </label>
         <div>
-          <input
+          <v-text-field
             :id="`filter-range-min-${position}`"
             v-model="range.min"
+            bg-color="white"
+            hide-details
             :maxlength="rangeInputSize()"
-            :size="rangeInputSize()"
             :placeholder="placeholder()"
-            class="filter-range-input"
+            :size="rangeInputSize()"
+            variant="outlined"
           />
         </div>
-        <label
-          :for="`filter-range-max-${position}`"
-          class="filter-range-label-max pb-2"
-        >
-          {{ rangeMaxLabel() }}<span class="sr-only"> (end of range)</span>
+        <label class="font-weight-500 px-2" :for="`filter-range-max-${position}`">
+          {{ rangeMaxLabel() }}<span class="sr-only"> end of range</span>
         </label>
         <div>
-          <input
+          <v-text-field
             :id="`filter-range-max-${position}`"
             v-model="range.max"
+            bg-color="white"
+            hide-details
             :maxlength="rangeInputSize()"
-            :size="rangeInputSize()"
             :placeholder="placeholder()"
-            class="filter-range-input"
+            :size="rangeInputSize()"
+            variant="outlined"
           />
         </div>
-        <div
-          v-if="size(errorPerRangeInput)"
-          class="sr-only"
-          aria-live="polite"
-        >
-          Error: {{ errorPerRangeInput }}
-        </div>
-        <!-- <b-popover
-          v-if="size(errorPerRangeInput)"
-          :show="true"
-          :target="`filter-range-max-${position}`"
-          placement="top"
-        >
-          <span class="text-error">{{ errorPerRangeInput }}</span>
-        </b-popover> -->
       </div>
     </div>
-    <div v-if="!isExistingFilter" class="filter-row-column-03 mt-1 pl-0">
-      <ProgressButton
-        v-if="showAdd"
-        id="unsaved-filter-add"
-        :action="onClickAddButton"
-        class="ml-2"
-        :disabled="isSaving"
-        :in-progress="isSaving"
-      >
-        Add
-      </ProgressButton>
+    <div v-if="!isExistingFilter" class="align-center d-flex ml-auto mr-2">
+      <div>
+        <ProgressButton
+          v-if="showAdd"
+          id="unsaved-filter-add"
+          :action="onClickAddButton"
+          :disabled="isSaving"
+          :in-progress="isSaving"
+          size="large"
+          text="Add"
+        />
+      </div>
+      <div v-if="isModifyingFilter && get(filter, 'type.ux')">
+        <v-btn
+          id="unsaved-filter-reset"
+          class="text-uppercase"
+          color="primary"
+          text="Cancel"
+          variant="text"
+          @click="reset"
+        />
+      </div>
     </div>
-    <div
-      v-if="isModifyingFilter && get(filter, 'type.ux') && !isExistingFilter"
-      class="filter-row-column-04"
-    >
-      <v-btn
-        id="unsaved-filter-reset"
-        class="ml-1"
-        variant="text"
-        @click="reset"
-      >
-        Cancel
-      </v-btn>
-    </div>
-    <div v-if="useCohortStore().isOwnedByCurrentUser && isExistingFilter" class="ml-auto p-2">
-      <div v-if="!isModifyingFilter" class="d-flex flex-row">
-        <span v-if="!isUX('boolean')">
+    <div v-if="useCohortStore().isOwnedByCurrentUser && isExistingFilter" class="ml-auto mr-3">
+      <div v-if="!isModifyingFilter" class="align-center d-flex justify-space-between">
+        <div v-if="!isUX('boolean')">
           <v-btn
             :id="`edit-added-filter-${position}`"
-            class="btn-cohort-added-filter pr-1"
-            variant="plain"
-            size="sm"
+            class="text-uppercase"
+            color="primary"
+            text="Edit"
+            variant="text"
             @click="onClickEditButton"
-          >
-            Edit
-          </v-btn> |
-        </span>
-        <v-btn
-          :id="`remove-added-filter-${position}`"
-          class="btn-cohort-added-filter pl-2 pr-0"
-          variant="plain"
-          size="sm"
-          @click="remove"
-        >
-          Remove
-        </v-btn>
+          />
+        </div>
+        <div v-if="!isUX('boolean')" class="mb-1">|</div>
+        <div>
+          <v-btn
+            :id="`remove-added-filter-${position}`"
+            class="text-uppercase"
+            color="primary"
+            text="Remove"
+            variant="text"
+            @click="remove"
+          />
+        </div>
       </div>
-      <div v-if="isModifyingFilter" class="d-flex flex-row">
+      <div v-if="isModifyingFilter" class="d-flex">
         <v-btn
           :id="`update-added-filter-${position}`"
-          :disabled="disableUpdateButton"
           color="primary"
-          size="sm"
+          :disabled="disableUpdateButton || isUpdatingExistingFilter"
+          size="large"
           @click="onClickUpdateButton"
         >
-          Update
+          <div class="align-center d-flex">
+            <div v-if="isUpdatingExistingFilter" class="pr-2">
+              <v-progress-circular indeterminate size="16" width="2" />
+            </div>
+            <div>
+              {{ isUpdatingExistingFilter ? 'Updating' : 'Update' }}
+            </div>
+          </div>
         </v-btn>
         <v-btn
           :id="`cancel-edit-added-filter-${position}`"
-          class="btn-cohort-added-filter"
-          variant="text"
-          size="sm"
+          class="font-size-14 text-uppercase"
+          :disabled="isUpdatingExistingFilter"
+          size="large"
+          text="Cancel"
+          variant="plain"
           @click="onClickCancelEdit"
-        >
-          Cancel
-        </v-btn>
+        />
       </div>
     </div>
   </div>
+  <v-expand-transition class="mb-4 mt-1 mr-4">
+    <v-card v-show="errorPerRangeInput" flat>
+      <v-alert
+        aria-live="polite"
+        color="red"
+        density="compact"
+        role="alert"
+        :text="errorPerRangeInput"
+        type="warning"
+        variant="outlined"
+      />
+    </v-card>
+  </v-expand-transition>
 </template>
 
-<script setup>
+<script>
+import FilterSelect from '@/components/cohort/FilterSelect'
+import ProgressButton from '@/components/util/ProgressButton'
+import {useCohortStore} from '@/stores/cohort-edit-session'
+import {useContextStore} from '@/stores/context'
 import {
   cloneDeep,
   get,
@@ -270,15 +245,7 @@ import {
   unset,
   values
 } from 'lodash'
-import {useCohortStore} from '@/stores/cohort-edit-session'
-import {useContextStore} from '@/stores/context'
-</script>
-
-<script>
-import FilterSelect from '@/components/cohort/FilterSelect'
-import ProgressButton from '@/components/util/ProgressButton'
 import {DateTime} from 'luxon'
-import {nextTick} from 'vue'
 import {putFocusNextTick} from '@/lib/utils'
 import {updateFilterOptions} from '@/stores/cohort-edit-session/utils'
 
@@ -299,6 +266,7 @@ export default {
     isExistingFilter: undefined,
     isMenuOpen: false,
     isModifyingFilter: false,
+    isUpdatingExistingFilter: false,
     isSaving: false,
     range: {
       min: undefined,
@@ -309,8 +277,7 @@ export default {
     selectedFilter: undefined,
     selectedOption: undefined,
     showAdd: false,
-    showRow: true,
-    valueOriginal: undefined
+    showRow: true
   }),
   watch: {
     editMode(newEditMode) {
@@ -380,7 +347,7 @@ export default {
           const isBadData = (min && !isValid(min)) || (max && !isValid(max))
           if (isBadData || (min && max && min.toUpperCase() > max.toUpperCase())) {
             // Invalid data or values are descending.
-            this.errorPerRangeInput = 'Requires letters in ascending order.'
+            this.errorPerRangeInput = 'Letters must be in ascending order.'
           }
           this.disableUpdateButton = !!this.errorPerRangeInput || isNilOrNan(min) || isNilOrNan(max) || min > max
         } else if (validation === 'date') {
@@ -408,25 +375,14 @@ export default {
   },
   created() {
     this.reset()
-    this.valueOriginal = this.filter && cloneDeep(this.filter)
   },
   methods: {
-    appendPopover(e) {
-      // Place v-calendar date picker popover where it belongs in the tab order
-      const el = document.getElementById(`filter-range-date-picker-${this.position}`)
-      const container = e.target.parentElement.querySelector('.filter-range-popover-container')
-      nextTick(() => {
-        const popover = el ? el.querySelector('.vc-popover-content-wrapper') : null
-        if (container && popover) {
-          container.replaceChildren(popover)
-        }
-      })
-    },
     formatGPA(value) {
       // Prepend zero in case input is, for example, '.2'. No harm done if input has a leading zero.
       const gpa = '0' + trim(value)
       return parseFloat(gpa).toFixed(3)
     },
+    get,
     getDropdownSelectedLabel() {
       if (Array.isArray(this.filter.options)) {
         const option = find(this.filter.options, ['value', this.filter.value])
@@ -446,27 +402,30 @@ export default {
     },
     onClickAddButton() {
       this.isSaving = true
+      const cohortStore = useCohortStore()
+      const contextStore = useContextStore()
       switch (get(this.filter, 'type.ux')) {
       case 'dropdown':
-        useContextStore().alertScreenReader(`Added ${this.filter.name} filter with value ${this.getDropdownSelectedLabel()}`)
+        contextStore.alertScreenReader(`Added ${this.filter.name} filter with value ${this.getDropdownSelectedLabel()}`)
         break
       case 'boolean':
-        useContextStore().alertScreenReader(`Added ${this.filter.name}`)
+        contextStore.alertScreenReader(`Added ${this.filter.name}`)
         this.filter.value = true
         break
       case 'range':
-        useContextStore().alertScreenReader(`Added ${this.filter.name} filter, ${this.range.min} to ${this.range.max}`)
+        contextStore.alertScreenReader(`Added ${this.filter.name} filter, ${this.range.min} to ${this.range.max}`)
         this.updateRangeFilter()
         this.range.min = this.range.max = undefined
         break
       }
       unset(this.filter, 'start')
       unset(this.filter, 'end')
-      useCohortStore().addFilter(this.filter)
-      useCohortStore().setModifiedSinceLastSearch(true)
+      cohortStore.addFilter(this.filter)
+      cohortStore.setModifiedSinceLastSearch(true)
       this.reset()
     },
     onClickCancelEdit() {
+      this.errorPerRangeInput = undefined
       useContextStore().alertScreenReader('Canceled')
       this.isModifyingFilter = false
       useCohortStore().setEditMode(null)
@@ -492,15 +451,17 @@ export default {
       useContextStore().alertScreenReader(`Begin edit of ${this.filter.name} filter`)
     },
     onClickUpdateButton() {
+      this.isUpdatingExistingFilter = true
       if (this.isUX('range')) {
         this.updateRangeFilter()
       }
       useCohortStore().updateExistingFilter({index: this.position, updatedFilter: this.filter})
       useCohortStore().setModifiedSinceLastSearch(true)
-      updateFilterOptions(this.domain, useCohortStore().cohortOwner(), useCohortStore().filters).then(() => {
+      updateFilterOptions(this.domain, useCohortStore().cohortOwner, useCohortStore().filters).then(() => {
         this.isModifyingFilter = false
         useCohortStore().setEditMode(null)
         useContextStore().alertScreenReader(`${this.filter.name} filter updated`)
+        this.isUpdatingExistingFilter = false
       })
     },
     onSelectFilter() {
@@ -676,13 +637,13 @@ export default {
     },
     remove() {
       useCohortStore().removeFilter(this.position)
-      updateFilterOptions(this.domain, useCohortStore().cohortOwner(), useCohortStore().filters).then(noop)
+      updateFilterOptions(this.domain, useCohortStore().cohortOwner, useCohortStore().filters).then(noop)
       useCohortStore().setEditMode(null)
       this.putFocusNewFilterDropdown()
       useContextStore().alertScreenReader(`${this.filter.label.primary} filter removed`)
     },
     reset() {
-      this.selectedFilter = this.selectedOption = undefined
+      this.errorPerRangeInput = this.selectedFilter = this.selectedOption = undefined
       this.disableUpdateButton = false
       this.showAdd = false
       this.range = mapValues(this.range, () => undefined)
@@ -692,6 +653,7 @@ export default {
       this.isSaving = false
       this.putFocusNewFilterDropdown()
     },
+    size,
     updateRangeFilter() {
       this.filter.value = {
         min: this.range.min,
@@ -701,7 +663,8 @@ export default {
         this.filter.value.min = this.formatGPA(this.filter.value.min)
         this.filter.value.max = this.formatGPA(this.filter.value.max)
       }
-    }
+    },
+    useCohortStore
   }
 }
 </script>
@@ -713,52 +676,13 @@ export default {
 </style>
 
 <style scoped>
-.btn-cohort-added-filter {
-  text-transform: uppercase;
-  font-size: 0.8em;
-  padding: 4px 1px 5px 5px;
-}
-.filter-row-column-01 .custom-select,
-.filter-row-column-02 .custom-select {
-  background-color: #f3f3f3;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  color: #000;
-  height: 42px;
-  text-align: left;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-.filter-row-column-01 {
-  border-left: 6px solid rgb(var(--v-theme-primary));
-  flex: 0 0 240px;
-}
-.filter-row-column-02 {
-  flex: 0;
-}
-.filter-row-column-03 {
-  flex-basis: auto;
-}
-.filter-row-column-03 button {
-  height: 40px;
-  margin-left: 12px;
-  width: 80px;
-}
-.filter-row-column-04 {
-  align-items: center;
-  display: flex;
-  flex: 1;
-}
 .existing-filter-name {
-  width: 260px;
+  width: 26%;
 }
-.filter-range-label-min {
-  padding: 10px 8px 0 0;
-}
-.filter-range-label-max {
-  padding: 10px 8px 0 10px;
-}
-.filter-range-input {
-  min-width: 125px;
+.filter-row {
+  align-items: center;
+  background-color: #f3f3f3;
+  border-left: 6px solid rgb(var(--v-theme-primary)) !important;
+  min-height: 56px;
 }
 </style>

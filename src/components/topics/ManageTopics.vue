@@ -13,27 +13,26 @@
         </v-text-field>
       </div>
 
-      <div class="pr-3 pt-2">
-        <v-btn
-          class="ml-2"
-          @click="filter = ''"
-        >
-          Clear
-        </v-btn>
-      </div>
+      <v-btn
+        class="button-position ml-2 mr-4"
+        color="secondary"
+        @click="filter = ''"
+      >
+        Clear
+      </v-btn>
+      <v-btn
+        id="new-note-button"
+        class="button-position d-inline p-0 pb-1 mr-3"
+        color="primary"
+        :disabled="isEditTopicModalOpen"
+        @click="openCreateTopicModal"
+      >
+        <v-icon :icon="mdiPlusBox"></v-icon>
+        Create New Topic
+      </v-btn>
     </div>
 
-    <v-btn
-      id="new-note-button"
-      class="p-0 pb-1"
-      :disabled="isEditTopicModalOpen"
-      @click="openCreateTopicModal"
-    >
-      <v-icon :icon="mdiPlusBox"></v-icon>
-      Create New Topic
-    </v-btn>
-
-    <div class="pt-2">
+    <div class="pt-2 mt-4">
       <v-table
         density="compact"
         height="350px"
@@ -41,10 +40,34 @@
       >
         <thead>
           <tr>
-            <th class="border-top-0"><span>Topic</span></th>
-            <th class="border-top-0"><span>Deleted?</span></th>
-            <th class="border-top-0"><span>Usage</span></th>
-            <th class="border-top-0"><span>Actions</span></th>
+            <th class="border-top-0 text-h6 cursor-pointer" @click="setTableSort('topic')">
+              <span>Topic</span>
+              <template v-if="sortBy === 'topic'">
+                <v-icon v-if="sortByMap.get('topic') === false" class="position-absolute mb-1" :icon="mdiMenuDown"></v-icon>
+                <v-icon v-if="sortByMap.get('topic') === true" class="position-absolute mb-1" :icon="mdiMenuUp"></v-icon>
+              </template>
+            </th>
+            <th class="border-top-0 text-h6 cursor-pointer" @click="setTableSort('deleted')">
+              <span>Deleted?</span>
+              <template v-if="sortBy === 'deleted'">
+                <v-icon v-if="sortByMap.get('deleted') === false" class="position-absolute mb-1" :icon="mdiMenuDown"></v-icon>
+                <v-icon v-if="sortByMap.get('deleted') === true" class="position-absolute mb-1" :icon="mdiMenuUp"></v-icon>
+              </template>
+            </th>
+            <th class="border-top-0 text-h6 cursor-pointer" @click="setTableSort('usage')">
+              <span>Usage</span>
+              <template v-if="sortBy === 'usage'">
+                <v-icon v-if="sortByMap.get('usage') === false" class="position-absolute mb-1" :icon="mdiMenuDown"></v-icon>
+                <v-icon v-if="sortByMap.get('usage') === true" class="position-absolute mb-1" :icon="mdiMenuUp"></v-icon>
+              </template>
+            </th>
+            <th class="border-top-0 text-h6 cursor-pointer" @click="setTableSort('deleted')">
+              <span>Actions</span>
+              <template v-if="sortBy === 'deleted'">
+                <v-icon v-if="sortByMap.get('deleted') === false" class="position-absolute mb-1" :icon="mdiMenuDown"></v-icon>
+                <v-icon v-if="sortByMap.get('deleted') === true" class="position-absolute mb-1" :icon="mdiMenuUp"></v-icon>
+              </template>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -56,21 +79,31 @@
             <td>{{ item.deletedAt ? 'Yes' : 'No' }}</td>
             <td>{{ item.countNotes }}</td>
             <td>
-              <v-btn
-                v-if="!item.deletedAt"
-                :icon="mdiTrashCanOutline"
-                density="compact"
-                @click="openDeleteTopicModal(item)"
-              >
-              </v-btn>
+              <v-tooltip v-if="!item.deletedAt" location="left" text="Delete">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon
+                    density="compact"
+                    @click="openDeleteTopicModal(item)"
+                  >
+                    <v-icon :icon="mdiTrashCanOutline"></v-icon>
+                  </v-btn>
+                </template>
+              </v-tooltip>
 
-              <v-btn
-                v-if="item.deletedAt"
-                :icon="mdiDeleteRestore"
-                density="compact"
-                @click="undelete(item)"
-              >
-              </v-btn>
+              <v-tooltip v-if="item.deletedAt" location="left" text="Undelete">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon
+                    density="compxact"
+                    @click="undelete(item)"
+                  >
+                    <v-icon :icon="mdiDeleteRestore" color="warning"></v-icon>
+                  </v-btn>
+                </template>
+              </v-tooltip>
             </td>
           </tr>
         </tbody>
@@ -99,6 +132,9 @@
 import {mdiDeleteRestore} from '@mdi/js'
 import {mdiTrashCanOutline} from '@mdi/js'
 import {mdiPlusBox} from '@mdi/js'
+import {mdiMenuDown} from '@mdi/js'
+import {mdiMenuUp} from '@mdi/js'
+
 import {useContextStore} from '@/stores/context'
 
 </script>
@@ -156,15 +192,25 @@ export default {
       isEditTopicModalOpen: false,
       topicDelete: undefined,
       topicEdit: undefined,
-      topics: undefined
+      topics: undefined,
+      sortBy: 'topic',
+      sortByMap: new Map([
+        ['topic', false],
+        ['deleted', false],
+        ['usage', false]
+      ])
     }
   },
   computed: {
     filteredTable() {
-      if (this.filter === null) {
+      if (this.sortBy) {
+        if (this.filter === null) {
+          return this.sortTable(this.topics)
+        }
+        return this.sortTable(this.topics.filter(item => item.topic.toLowerCase().includes(this.filter.toLowerCase())))
+      } else {
         return this.topics
       }
-      return this.topics.filter(item => item.topic.toLowerCase().includes(this.filter.toLowerCase()))
     },
   },
   mounted() {
@@ -237,7 +283,67 @@ export default {
         useContextStore().alertScreenReader(`Topic ${topic.topic} un-deleted.`)
         putFocusNextTick(`topic-${topic.id}`)
       })
+    },
+    setTableSort(filterBy) {
+      this.sortBy = filterBy
+      this.sortByMap.set(this.sortBy, !this.sortByMap.get(this.sortBy))
+    },
+    sortTable(sortByArr) {
+      const newArr = []
+      switch (this.sortBy) {
+      case 'topic':
+        return !this.sortByMap.get('topic') ? sortByArr.sort((a,b) => (a.topic.toLowerCase() > b.topic.toLowerCase()) ? 1 : ((b.topic.toLowerCase() > a.topic.toLowerCase()) ? -1 : 0)) : sortByArr.sort((a,b) => (a.topic.toLowerCase() < b.topic.toLowerCase()) ? 1 : ((b.topic.toLowerCase() < a.topic.toLowerCase()) ? -1 : 0))
+
+      case 'deleted':
+        if (!this.sortByMap.get('deleted')) {
+          sortByArr.forEach(item => {
+            if (item.deletedAt) {
+              newArr.push(item)
+            }
+          })
+
+          sortByArr.forEach(item => {
+            if (!item.deletedAt) {
+              newArr.push(item)
+            }
+          })
+        } else {
+          sortByArr.forEach(item => {
+            if (!item.deletedAt) {
+              newArr.push(item)
+            }
+          })
+          sortByArr.forEach(item => {
+            if (item.deletedAt) {
+              newArr.push(item)
+            }
+          })
+        }
+
+        return newArr
+
+      case 'usage':
+        return !this.sortByMap.get('usage') ? sortByArr.sort((a,b) => a.countNotes - b.countNotes) : sortByArr.sort((a,b) => b.countNotes - a.countNotes)
+
+      default:
+        return !this.sortByMap.get('topic') ? sortByArr.sort((a,b) => (a.topic > b.topic) ? 1 : ((b.topic > a.topic) ? -1 : 0)) : sortByArr.sort((a,b) => (a.topic < b.topic) ? 1 : ((b.topic < a.topic) ? -1 : 0))
+      }
     }
   }
 }
 </script>
+
+
+<style scoped>
+#new-note-button {
+  margin-left: auto;
+}
+
+.top-box {
+  box-sizing: border-box;
+}
+
+.button-position {
+  top: 8px;
+}
+</style>

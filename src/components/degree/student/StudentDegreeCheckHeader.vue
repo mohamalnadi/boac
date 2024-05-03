@@ -5,7 +5,7 @@
         <b-col>
           <div class="align-items-start d-flex mb-3 p-3 warning-message-container">
             <div class="d-inline-block pr-2 w-100">
-              <span class="font-weight-bolder">Note:</span> Revisions to the
+              <span class="font-weight-700">Note:</span> Revisions to the
               <router-link
                 id="original-degree-template"
                 target="_blank"
@@ -213,7 +213,7 @@
                 <div
                   v-if="data.item.enrollmentStatus === 'W'"
                   :id="`in-progress-course-${data.item.termId}-${data.item.sectionId}-waitlisted`"
-                  class="font-size-14 red-flag-status text-uppercase"
+                  class="font-size-14 error font-weight-bold text-uppercase"
                 >
                   (W<span class="sr-only">aitlisted</span>)
                 </div>
