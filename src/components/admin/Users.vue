@@ -3,7 +3,7 @@
     <v-container fluid class="mb-2">
       <v-row align-v="center" no-gutters>
         <v-col cols="2" class="pr-2">
-          <v-select
+          <!-- <v-select
             id="user-filter-options"
             v-model="filterType"
             :disabled="isBusy"
@@ -15,12 +15,71 @@
             style="font-size: 16px;"
             @update:modelValue="refreshUsers"
           >
-          </v-select>
+          </v-select> -->
+          <div class="custom-select-container">
+            <select
+              id="user-filter-options"
+              v-model="filterType"
+              class="custom-select"
+              :disabled="isBusy"
+              @change="refreshUsers"
+            >
+              <option
+                v-for="option in filterTypeOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.name }}
+              </option>
+            </select>
+          </div>
+          <!-- <v-combobox
+            id="user-filter-options"
+            v-model="filterType"
+            :disabled="isBusy"
+            label="Filter Type"
+            variant="outlined"
+            density="compact"
+            style="font-size: 16px;"
+            @change="refreshUsers"
+          >
+            <template #default>
+              <option
+                v-for="option in filterTypeOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.name }}
+              </option>
+            </template>
+          </v-combobox> -->
+          <!-- <v-select
+            id="user-filter-options"
+            v-model="filterType"
+            :disabled="isBusy"
+            :items="[]"
+            variant="outlined"
+            density="compact"
+            style="font-size: 16px;"
+            :menu-props="{ closeOnContentClick: false }"
+            @change="refreshUsers"
+          >
+            <template #default>
+              <option :value="null">All</option>
+              <option
+                v-for="option in filterTypeOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.name }}
+              </option>
+            </template>
+          </v-select> -->
         </v-col>
         <v-col v-if="filterType === 'search'" cols="10">
           <span id="user-search-input" class="sr-only">Search for user. Expect auto-suggest as you type name or UID.</span>
           <Autocomplete
-            id="search-options-note-filters-author"
+            id="search-user-input"
             v-model="userSelection"
             :compact="true"
             :disabled="isBusy"
@@ -47,14 +106,6 @@
                 style="font-size: 16px;"
                 @update:modelValue="refreshUsers"
               >
-                <!-- <option :value="null">All</option>
-                <option
-                  v-for="department in departments"
-                  :key="department.code"
-                  :value="department.code"
-                >
-                  {{ department.name }}
-                </option> -->
               </v-select>
             </div>
             <div class="pr-2">
@@ -140,6 +191,8 @@
       <span v-if="totalUserCount === 0">No users found</span>
       <span v-if="totalUserCount > 0">{{ pluralize('user', totalUserCount) }}</span>
     </div>
+    <!--       :item-class="getTableCssClass"
+ -->
     <v-data-table-server
       v-model:expanded="expanded"
       v-model:items-per-page="itemsPerPage"
@@ -153,6 +206,8 @@
       show-expand
       :hide-default-footer="true"
       disable-pagination
+      @update:sort-by="handleSort"
+      @update:sort-desc="handleSort"
     >
       <template #item.uid="{ item }">
         <span> {{ item.uid }}</span>
@@ -249,7 +304,7 @@ import EditUserProfileModal from '@/components/admin/EditUserProfileModal'
 import Autocomplete from '@/components/util/Autocomplete.vue'
 import Util from '@/mixins/Util'
 import {alertScreenReader} from '@/lib/utils'
-import {becomeUser, getAdminUsers, getUserByUid, getUsers, userAutocomplete} from '@/api/user'
+import {becomeUser, getAdminUsers, getUserByUid, getUsers, userAutocomplete, getAllUsers} from '@/api/user'
 import {getBoaUserRoles} from '@/berkeley'
 import {DateTime} from 'luxon'
 
@@ -280,11 +335,12 @@ export default {
     filterType: 'search',
     isBusy: false,
     sortBy: 'lastName',
-    sortDescending: false,
+    sortDesc: false,
     totalUserCount: 0,
     userSelection: undefined,
     departmentSelectionList: [],
     users: [],
+    allUsersCache: [],
     items: ref([]),
     filterTypeOptions: [
       {
@@ -344,45 +400,95 @@ export default {
       {
         title: '',
         key: 'data-table-expand',
-        align: 'start'
+        align: 'start',
+        sortable: false
       },
       {
         title: 'UID',
         key: 'uid',
-        align: 'start'
+        align: 'start',
+        sortable: true,
+        headerProps: {
+          class: ['header-text-styling']
+        },
       },
       {
         title: '',
         key: 'edit',
-        align: 'end'
+        align: 'end',
+        sortable: false,
+        // headerProps: {
+        //   class: 'purple-background'
+        // },
+        cellProps: {
+          class: 'purple-background'
+        },
       },
       {
         title: 'Name',
         key: 'name',
-        align: 'start'
+        align: 'start',
+        sortable: true,
+        headerProps: {
+          class: ['header-color-styling', 'header-text-styling']
+        },
+        cellProps: {
+          class: 'purple-background'
+        },
       },
       {
         title: 'Departments',
         key: 'departments',
-        align: 'start'
+        align: 'start',
+        sortable: true,
+        headerProps: {
+          class: ['header-text-styling']
+        },
       },
       {
         title: 'Status',
         key: 'deletedAt',
-        align: 'start'
+        align: 'start',
+        sortable: true,
+        headerProps: {
+          class: ['header-text-styling']
+        },
       },
       {
         title: 'Last Login',
         key: 'lastLogin',
-        align: 'start'
+        align: 'start',
+        sortable: true,
+        headerProps: {
+          class: ['header-text-styling']
+        },
+        cellProps: {
+          class: 'light-green-background'
+        }
       },
       {
         title: 'Email',
         key: 'campusEmail',
-        align: 'start'
+        align: 'start',
+        sortable: false,
+        headerProps: {
+          class: ['header-text-styling']
+        },
       }
     ]
   }),
+  computed: {
+    sortedUsers() {
+      if (!this.sortBy) return this.users
+
+      return [...this.users].sort((a, b) => {
+        let result = 0
+        if (a[this.sortBy] < b[this.sortBy]) result = -1
+        if (a[this.sortBy] > b[this.sortBy]) result = 1
+        return this.sortDesc ? -result : result
+      })
+    },
+  },
   watch: {
     refresh(value) {
       if (value) {
@@ -392,12 +498,10 @@ export default {
     userSelection(newVal) {
       if (newVal) {
         this.refreshUsers()
-        this.onUpdateSearch()
       }
     }
   },
   created() {
-    // console.log('this.departments', this.departments)
     this.departmentSelectionList = [{
       id: -1, code: null, name: 'All'
     }, ...this.departments]
@@ -405,8 +509,27 @@ export default {
   },
   mounted() {
     this.usersProvider()
+    // this.getAllUsersCall()
   },
   methods: {
+    handleSort(sortBy, sortDesc) {
+      this.sortBy = sortBy
+      this.sortDesc = sortDesc
+      this.usersProvider() // Method to fetch users with new sorting parameters
+    },
+    getAllUsersCall() {
+      getAllUsers().then(data => {
+        this.allUsersCache = data
+      })
+    },
+    getTableCssClass() {
+      return 'color-gray-200'
+      // if (item.index % 2 === 0) {
+      //   return 'color-gray-100'
+      // } else {
+      //   return 'color-gray-200'
+      // }
+    },
     clickColumn(slotData) {
       const indexExpanded = this.expanded.findIndex(i => i === slotData)
       if (indexExpanded > -1) {
@@ -418,7 +541,7 @@ export default {
     afterUpdateUser(profile) {
       alertScreenReader(`${profile.name} profile updated.`)
       if (this.filterType === 'search') {
-        this.userSelection = profile
+        this.userSelection = profile.uid
       }
       this.refreshUsers()
     },
@@ -469,7 +592,7 @@ export default {
       switch(this.filterType) {
       case 'admins':
         this.totalUserCount = undefined
-        promise = getAdminUsers(this.sortBy, this.sortDescending, false).then(data => {
+        promise = getAdminUsers(this.sortBy, this.sortDesc, false).then(data => {
           this.totalUserCount = data.totalUserCount
           this.users = data.users
           return data.users
@@ -483,7 +606,7 @@ export default {
           this.filterBy.deptCode,
           this.filterBy.role,
           this.sortBy,
-          this.sortDescending
+          this.sortDesc
         ).then(data => {
           this.totalUserCount = data.totalUserCount
           this.users = data.users
@@ -492,6 +615,7 @@ export default {
         break
       case 'search':
         this.totalUserCount = 0
+        this.users = []
         if (this.userSelection) {
           promise = getUserByUid(this.userSelection, false).then(data => {
             this.totalUserCount = 1
@@ -575,5 +699,66 @@ export default {
   color: #aaa;
   font-weight: normal;
   padding: 5px 20px 5px 0;
+}
+.color-gray-100 {
+  background-color: #f9f9f9;
+}
+.dark-gray-background {
+  background-color: #e0dede;
+}
+.purple-background {
+  background-color: #9bcbfb;
+  color: #377eb6;
+  font-weight: 900;
+}
+.light-green-background {
+  background-color: #bee5eb;
+  font-weight: 900;
+}
+.header-text-styling {
+  /* position: relative;
+  top: 20px; */
+  font-weight: 900;
+  font-size: 16px;
+}
+.header-color-styling {
+  /* background-color: #9bcbfb; */
+  /* color: #377eb6; */
+}
+.custom-select-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.custom-select-container label {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #6b6b6b; /* Matching Vuetify's label color */
+}
+
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: white;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 16px;
+  color: #495057;
+  box-shadow: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.custom-select:focus {
+  border-color: #3f51b5; /* Matching Vuetify's focus color */
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.25); /* Matching Vuetify's focus shadow */
+}
+
+.custom-select:disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
 }
 </style>

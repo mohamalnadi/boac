@@ -20,6 +20,7 @@
       :maxlength="maxlength"
       :menu-icon="null"
       variant="outlined"
+      autocomplete="off"
       @click:clear="onClear"
       @update:menu="s => s ? null : $emit('user-selected', selected)"
       @update:search="onUpdateSearch"
@@ -139,14 +140,19 @@ const onClickAdd = () => {
 }
 
 const onUpdateSearch = _.debounce(args => {
-  isFetching.value = true
-  if (props.suggestWhen(args)) {
-    const controller = new AbortController()
-    props.fetch(args, 20, controller).then(results => {
-      items.value = map(results, result => ({title: result.label, value: result.uid}))
-      isFetching.value = false
-    })
+  if (args?.length > 0) {
+    isFetching.value = true
+    if (props.suggestWhen(args)) {
+      const controller = new AbortController()
+      props.fetch(args, 20, controller).then(results => {
+        items.value = map(results, result => ({title: result.label, value: result.uid}))
+        isFetching.value = false
+      })
+    }
+  } else {
+    isFetching.value = false
   }
+  
 }, 500)
 
 </script>
