@@ -176,19 +176,31 @@
         </template>
 
         <template #item.lastName="{ item }">
-          <div v-if="!item.name">
-            <span class="faint-text text-body-2">(Name unavailable)</span>
-          </div>
-          <div v-if="item.name">
-            <a
-              :id="`directory-link-${item.uid}`"
-              :aria-label="`Go to UC Berkeley Directory page of ${item.name}`"
-              :href="`https://www.berkeley.edu/directory/results?search-term=${item.name}`"
-              class="m-0"
-              target="_blank"
-            >
-              {{ item.name }}
-            </a>
+          <div class="name-container">
+            <div class="icons">
+              <span v-if="!item.canAccessCanvasData">
+                <span class="c-letter">C</span>
+                <span class="slash">\</span>
+              </span>
+              <span v-if="!item.canAccessAdvisingData" class="advising-data">
+                <span class="slash-2">\</span>
+                <v-icon :icon="mdiNoteOutline" size="small" />
+              </span>
+            </div>
+            <div v-if="!item.name" class="name">
+              <span class="faint-text text-body-2">(Name unavailable)</span>
+            </div>
+            <div v-if="item.name" class="name">
+              <a
+                :id="`directory-link-${item.uid}`"
+                :aria-label="`Go to UC Berkeley Directory page of ${item.name}`"
+                :href="`https://www.berkeley.edu/directory/results?search-term=${item.name}`"
+                class="m-0"
+                target="_blank"
+              >
+                {{ item.name }}
+              </a>
+            </div>
           </div>
         </template>
 
@@ -250,6 +262,7 @@
 <script setup>
 import {mdiEmail} from '@mdi/js'
 import {mdiLoginVariant} from '@mdi/js'
+import {mdiNoteOutline} from '@mdi/js'
 import {ref} from 'vue'
 </script>
 
@@ -735,5 +748,53 @@ export default {
 
 :deep(.v-table > .v-table__wrapper > table > thead > tr > th) {
       height: 40px !important;
-    }
+}
+
+.c-letter {
+  position: relative;
+  top: 1px;
+  left: 1px;
+}
+
+.slash {
+  position: relative;
+    top: 4px;
+    left: -8px;
+    font-size: 22px;
+    color: red;
+}
+
+.slash-2 {
+  position: relative;
+  top: 4px;
+  left: 12px;
+  font-size: 22px;
+  color: red;
+  z-index: 10000;
+}
+
+.advising-data {
+  position: relative;
+  left: -8px;
+}
+
+.name-container {
+  position: relative;
+  top: -2px;
+}
+
+.icons {
+  position: relative;
+  left: -23px;
+  top: -1px;
+  display: inline-block;
+}
+
+.name {
+  position: relative;
+  left: -23px;
+  display: inline-block;
+}
+
+
 </style>

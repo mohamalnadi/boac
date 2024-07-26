@@ -384,10 +384,10 @@ export default {
       this.closeModal()
     },
     closeModal() {
-      this.error = undefined
-      this.userProfile = undefined
-      this.memberships = undefined
       this.showEditUserModal = false
+      this.error = {}
+      this.userProfile = {}
+      this.memberships = {}
     },
     isCoe,
     openEditUserModal() {
