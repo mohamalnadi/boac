@@ -235,6 +235,7 @@ const noteAndAppointmentOptions = reactive({
   advisorCsid: undefined,
   advisorUid: undefined,
   studentCsid: undefined,
+  departmentCodes: undefined,
   topic: undefined,
   dateFrom: undefined,
   dateTo: undefined,
@@ -282,6 +283,7 @@ onMounted(() => {
   if (includeNotesAndAppointments) {
     noteAndAppointmentOptions.advisorCsid = route.query.advisorCsid
     noteAndAppointmentOptions.advisorUid = route.query.advisorUid
+    noteAndAppointmentOptions.departmentCodes = route.query.departmentCodes
     noteAndAppointmentOptions.studentCsid = route.query.studentCsid
     noteAndAppointmentOptions.topic = route.query.noteTopic
     noteAndAppointmentOptions.dateFrom = route.query.noteDateFrom

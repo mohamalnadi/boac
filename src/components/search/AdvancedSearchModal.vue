@@ -108,6 +108,13 @@
                       value="you"
                       @change="() => searchStore.setAuthor(null)"
                     />
+                    <v-radio
+                      id="search-options-note-filters-posted-by-your department"
+                      :disabled="searchStore.isSearching"
+                      :ischecked="searchStore.postedBy === 'yourDepartment'"
+                      label="Your Department(s)"
+                      value="yourDepartment"
+                    />
                   </v-radio-group>
                 </div>
                 <div class="mt-2 w-75">
@@ -343,6 +350,7 @@ const reset = force => {
 }
 
 const search = () => {
+  console.log('current user', currentUser)
   const q = trim(searchStore.queryText)
   if (q || !searchInputRequired.value) {
     searchStore.setIsSearching(true)
@@ -366,6 +374,13 @@ const search = () => {
       } else if (searchStore.author) {
         query.advisorCsid = searchStore.author.sid
         query.advisorUid = searchStore.author.uid
+      } else if (searchStore.postedBy === 'yourDepartment') {
+        if (currentUser.departments && currentUser.departments.length > 0) {
+          query.departmentCodes = []
+          currentUser.departments.forEach((department) => {
+            query.departmentCodes.push(department.code)
+          })
+        }
       }
       if (searchStore.student) {
         query.studentCsid = searchStore.student.sid
