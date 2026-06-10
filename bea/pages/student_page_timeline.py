@@ -135,30 +135,41 @@ class StudentPageTimeline(BoaPages):
     def wait_for_attachments(self):
         self.when_present(self.ATTACHMENT_EL, utils.get_short_timeout())
 
+    def attachment_pill_loc(self, item):
+        item_type = self.item_type(item)
+        return By.XPATH, f'//div[contains(@id, "{item_type}-{item.record_id}-attachment-")]'
+
     def attachment_span_loc(self, item):
         item_type = self.item_type(item)
-        return By.XPATH, f'//li/div[contains(@id, "{item_type}-{item.record_id}-attachment-")]/a/span[position() = 2]'
+        return By.XPATH, f'//div[contains(@id, "{item_type}-{item.record_id}-attachment-")]//a/span[contains(@class, "truncate-with-ellipsis")]'
 
     def attachment_link_loc(self, item):
         item_type = self.item_type(item)
-        return By.XPATH, f'//a[contains(@id, "{item_type}-{item.record_id}-attachment")]'
+        return By.XPATH, f'//div[contains(@id, "{item_type}-{item.record_id}-attachment-")]//a[@href]'
 
     def click_attachment_link(self, item, attachment_name):
         time.sleep(utils.get_click_sleep())
         self.driver.execute_script('arguments[0].click();', self.item_attachment_el(item, attachment_name))
 
     def item_attachment_els(self, item):
+        pills = self.elements(self.attachment_pill_loc(item))
+        if pills:
+            return pills
         spans = self.elements(self.attachment_span_loc(item))
         links = self.elements(self.attachment_link_loc(item))
         return spans + links
 
     def item_attachment_el(self, item, attachment_name):
         for el in self.item_attachment_els(item):
-            if '\n' in el.text:
-                text = el.text.split('\n')[1]
-            else:
-                text = el.text
+            text = el.get_attribute('innerText') or el.text
+            if '\n' in text:
+                text = text.split('\n')[-1]
             if text.strip().lower() == attachment_name.lower():
+                if el.tag_name == 'a':
+                    return el
+                links = el.find_elements(By.TAG_NAME, 'a')
+                if links:
+                    return links[0]
                 return el
 
     def download_attachment(self, item, attachment, student=None):

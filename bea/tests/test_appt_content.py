@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 import datetime
+import json
 import re
 
 import pytest
@@ -105,6 +106,12 @@ class TestApptContent:
     def test_expanded_details(self, tc):
         self.student_page.expand_item(tc.appt)
         if tc.appt.detail and tc.appt.detail.strip():
+            if tc.appt.source == TimelineRecordSource.CALENDLY:
+                try:
+                    if not json.loads(tc.appt.detail):
+                        return
+                except json.JSONDecodeError:
+                    pass
             assert self.student_page.expanded_appt_details(tc.appt)
 
     def test_expanded_date(self, tc):
@@ -118,8 +125,9 @@ class TestApptContent:
         if tc.appt.source in [TimelineRecordSource.CALENDLY, TimelineRecordSource.YCBM]:
             start = datetime.datetime.strftime(tc.appt.start_time, '%-l:%M %p')
             end = datetime.datetime.strftime(tc.appt.end_time, '%-l:%M %p')
-            utils.assert_actual_includes_expected(self.student_page.expanded_appt_time_range(tc.appt),
-                                                  f'{start} - {end}')
+            expected = re.sub(r'\s+(AM|PM)', r'\1', f'{start} - {end}')
+            actual = self.student_page.expanded_appt_time_range(tc.appt)
+            utils.assert_actual_includes_expected(re.sub(r'\s+(AM|PM)', r'\1', actual), expected)
 
     def test_expanded_advisor(self, tc):
         # Appts have varying amounts of advisor info, just verify something's there

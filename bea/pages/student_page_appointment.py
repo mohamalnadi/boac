@@ -72,7 +72,7 @@ class StudentPageAppointment(StudentPageTimeline, CreateNoteModal):
 
     @staticmethod
     def appt_advisor_loc(appt):
-        return By.ID, f'appointment-{appt.record_id}-advisor-name'
+        return By.ID, f'note-{appt.record_id}-author-name'
 
     def collapsed_appt_detail(self, appt):
         return self.el_text_if_exists((By.ID, f'appointment-{appt.record_id}-details-closed'))
@@ -105,10 +105,10 @@ class StudentPageAppointment(StudentPageTimeline, CreateNoteModal):
         return self.el_text_if_exists(self.appt_advisor_loc(appt))
 
     def expanded_appt_advisor_role(self, appt):
-        return self.el_text_if_exists((By.ID, f'appointment-{appt.record_id}--advisor-role'))
+        return self.el_text_if_exists((By.ID, f'note-{appt.record_id}-author-role'))
 
     def expanded_appt_advisor_depts(self, appt):
-        return self.els_text_if_exist((By.XPATH, f'//span[contains(@id, "appointment-{appt.record_id}-advisor-dept-")]'))
+        return self.els_text_if_exist((By.XPATH, f'//span[contains(@id, "note-{appt.record_id}-author-dept-")]'))
 
     def expanded_appt_type(self, appt):
         return self.el_text_if_exists((By.ID, f'appointment-{appt.record_id}-type'))
@@ -117,7 +117,7 @@ class StudentPageAppointment(StudentPageTimeline, CreateNoteModal):
         return self.els_text_if_exist((By.XPATH, f'//div[contains(@id, "appointment-{appt.record_id}-topic-")]'))
 
     def expanded_appt_attachments(self, appt):
-        return [el.text.strip().lower() for el in self.item_attachment_els(appt)]
+        return [el.get_attribute('innerText').strip().lower() for el in self.item_attachment_els(appt)]
 
     # COMMENTS
 
