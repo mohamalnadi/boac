@@ -69,16 +69,18 @@ class StudentPageEForm(StudentPageTimeline, CreateNoteModal):
     def expanded_e_form_created_date(self, e_form):
         created_loc = By.ID, f'expanded-eForm-{e_form.record_id}-created-at'
         if self.is_present(created_loc):
-            text = self.element(created_loc).text.replace('Created on', '')
-            return re.sub(r'/\s+ /', ' ', text).strip()
+            return self.normalize_timeline_datetime_text(
+                self.element(created_loc).text.replace('Created on', '')
+            )
         else:
             return None
 
     def expanded_e_form_updated_date(self, e_form):
         updated_loc = By.ID, f'expanded-eForm-{e_form.record_id}-updated-at'
         if self.is_present(updated_loc):
-            text = self.element(updated_loc).text.replace('Last updated on', '')
-            return re.sub(r'/\s+ /', ' ', text).strip()
+            return self.normalize_timeline_datetime_text(
+                self.element(updated_loc).text.replace('Last updated on', '')
+            )
         else:
             return None
 
